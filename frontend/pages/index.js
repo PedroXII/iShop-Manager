@@ -15,7 +15,7 @@ export default function Home() {
       <div>
         <body>
           <main >
-            <p>Oi.</p>
+            <p>Home</p>
           </main>
         </body>
         <footer>
