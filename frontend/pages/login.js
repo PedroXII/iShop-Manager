@@ -3,11 +3,9 @@ export default function Login() {
     //O front-end.
     <>
       <div>
-        <body>
-          <main >
-            <p>Login</p>
-          </main>
-        </body>
+        <main >
+          <p>Login</p>
+        </main>
         <footer>
 
         </footer>

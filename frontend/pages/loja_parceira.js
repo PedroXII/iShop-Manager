@@ -3,11 +3,9 @@ export default function LojaParceira() {
     //O front-end.
     <>
       <div>
-        <body>
-          <main >
-            <p>Loja Parceira</p>
-          </main>
-        </body>
+        <main >
+          <p>Loja Parceira</p>
+        </main>
         <footer>
 
         </footer>

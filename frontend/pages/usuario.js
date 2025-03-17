@@ -3,11 +3,9 @@ export default function User() {
     //O front-end.
     <>
       <div>
-        <body>
-          <main >
-            <p>Usuário</p>
-          </main>
-        </body>
+        <main >
+          <p>Usuário</p>
+        </main>
         <footer>
 
         </footer>

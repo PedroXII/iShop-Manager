@@ -3,11 +3,9 @@ export default function Produto() {
     //O front-end.
     <>
       <div>
-        <body>
-          <main >
-            <p>Produtos</p>
-          </main>
-        </body>
+        <main >
+          <p>Produtos</p>
+        </main>
         <footer>
 
         </footer>

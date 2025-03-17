@@ -3,11 +3,9 @@ export default function Register() {
     //O front-end.
     <>
       <div>
-        <body>
-          <main >
-            <p>Registro</p>
-          </main>
-        </body>
+        <main >
+          <p>Registro</p>
+        </main>
         <footer>
 
         </footer>

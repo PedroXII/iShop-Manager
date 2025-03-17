@@ -3,11 +3,9 @@ export default function Client() {
     //O front-end.
     <>
       <div>
-        <body>
-          <main >
-            <p>Cliente</p>
-          </main>
-        </body>
+        <main >
+          <p>Cliente</p>
+        </main>
         <footer>
 
         </footer>

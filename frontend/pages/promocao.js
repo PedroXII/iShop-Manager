@@ -3,11 +3,9 @@ export default function Sale() {
     //O front-end.
     <>
       <div>
-        <body>
-          <main >
-            <p>Promoções</p>
-          </main>
-        </body>
+        <main >
+          <p>Promoções</p>
+        </main>
         <footer>
 
         </footer>

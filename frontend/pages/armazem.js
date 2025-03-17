@@ -3,11 +3,9 @@ export default function Armazem() {
     //O front-end.
     <>
       <div>
-        <body>
-          <main >
-            <p>Armazem</p>
-          </main>
-        </body>
+        <main >
+          <p>Armazem</p>
+        </main>
         <footer>
 
         </footer>
