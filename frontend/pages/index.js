@@ -18,7 +18,7 @@ export default function Home() {
         <main>
           <section>
             <nav
-              className="navbar bg-primary text-light col-12 navbar-expand-lg position-fixed"
+              className="navbar bg-primary col-12 navbar-expand-lg position-fixed"
               style={{ zIndex: 99, top: 0, fontFamily: "monaco, verdana"}}
             >
               <div className="container-fluid col-11 m-auto">
@@ -45,22 +45,22 @@ export default function Home() {
                   <ul className="navbar-nav ms-auto">
                     <li className="nav-item">
                       <Link href="#top">
-                        <a className="nav-link">Home</a>
+                        <a className="nav-link text-light">Home</a>
                       </Link>
                     </li>
                     <li className="nav-item">
                       <Link href="/login">
-                        <a className="nav-link">Login</a>
+                        <a className="nav-link text-light">Login</a>
                       </Link>
                     </li>
                     <li className="nav-item">
                       <Link href="/register">
-                        <a className="nav-link">Inscreva-se</a>
+                        <a className="nav-link text-light">Inscreva-se</a>
                       </Link>
                     </li>
                     <li className="nav-item">
                       <Link href="#bottom">
-                        <a className="nav-link">Sobre</a>
+                        <a className="nav-link text-light">Sobre</a>
                       </Link>
                     </li>
                   </ul>
