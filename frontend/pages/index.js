@@ -1,4 +1,6 @@
 import Head from "next/head";
+import Image from "next/image";
+import Link from "next/link";
 import styles from "@/styles/Home.module.css";
 
 export default function Home() {
@@ -20,14 +22,14 @@ export default function Home() {
               style={{ zIndex: 99, top: 0 }}
             >
               <div className="container-fluid col-11 m-auto">
-                <a href="#top">
-                  <img
+                <Link href="#top">
+                  <Image
                     src="https://img.freepik.com/free-vector/charity-logo-hands-supporting-heart-icon-flat-design-vector-illustration_53876-136265.jpg?t=st=1731789394~exp=1731792994~hmac=a290b7eafdabfe28645079fca945f3c37b2e280b64c3e14b5f3fac94afaf650b&w=740"
-                    className="img-fluid"
                     alt="LOGO"
-                    style={{ width: "40px", height: "40px" }}
+                    width={40}
+                    height={40}
                   />
-                </a>
+                </Link>
                 <button
                   className="navbar-toggler"
                   type="button"
@@ -42,24 +44,24 @@ export default function Home() {
                 <div className="collapse navbar-collapse" id="navbarNav">
                   <ul className="navbar-nav ms-auto">
                     <li className="nav-item">
-                      <a className="nav-link" href="#top">
-                        Home
-                      </a>
+                      <Link href="#top">
+                        <a className="nav-link">Home</a>
+                      </Link>
                     </li>
                     <li className="nav-item">
-                      <a className="nav-link" href="/login">
-                        Login
-                      </a>
+                      <Link href="/login">
+                        <a className="nav-link">Login</a>
+                      </Link>
                     </li>
                     <li className="nav-item">
-                      <a className="nav-link" href="/register">
-                        Inscreva-se
-                      </a>
+                      <Link href="/register">
+                        <a className="nav-link">Inscreva-se</a>
+                      </Link>
                     </li>
                     <li className="nav-item">
-                      <a className="nav-link" href="#bottom">
-                        Sobre
-                      </a>
+                      <Link href="#bottom">
+                        <a className="nav-link">Sobre</a>
+                      </Link>
                     </li>
                   </ul>
                 </div>
@@ -69,11 +71,13 @@ export default function Home() {
 
           <section id="top">
             <div className="container row m-auto text-light">
-              <img
+              <Image
                 src="https://img.freepik.com/free-vector/true-friends-concept-illustration_114360-1730.jpg?t=st=1731791994~exp=1731795594~hmac=a9998890330280f1daaa992abf7e4b4e53086a9cafca0a3e3c083f0f787acc4e&w=740"
                 alt="Best friends hugging"
+                width={400}
+                height={400}
                 className="col-sm-6 col-6 img-fluid"
-                style={{ marginTop: "100px", height: "400px", width: "400px" }}
+                style={{ marginTop: "100px" }}
               />
               <div
                 className="container d-flex align-items-center col-6"
@@ -81,49 +85,6 @@ export default function Home() {
               >
                 Bem-vindo ao iShop Manager! Gerencie seus produtos e estoque de
                 forma eficiente e segura.
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <div className="container-fluid mt-5 w-75 h-75">
-              <div id="carouselExampleCaptions" className="carousel slide">
-                <div className="carousel-indicators">
-                  <button
-                    type="button"
-                    data-bs-target="#carouselExampleCaptions"
-                    data-bs-slide-to="0"
-                    className="active"
-                    aria-current="true"
-                    aria-label="Slide 1"
-                  ></button>
-                  <button
-                    type="button"
-                    data-bs-target="#carouselExampleCaptions"
-                    data-bs-slide-to="1"
-                    aria-label="Slide 2"
-                  ></button>
-                  <button
-                    type="button"
-                    data-bs-target="#carouselExampleCaptions"
-                    data-bs-slide-to="2"
-                    aria-label="Slide 3"
-                  ></button>
-                </div>
-                <div className="carousel-inner">
-                  <div className="carousel-item active">
-                    <img
-                      src="https://img.freepik.com/free-photo/pleased-dark-skinned-young-woman-gives-warm-hug-her-boyfriend-being-pleased-pose-near-window-have-romantic-relationship-stand-cozy-room-husband-wife-feel-pleased-togetherness_273609-29025.jpg?t=st=1731791624~exp=1731795224~hmac=75254fffc302946f21476f27892d291d170ccd22ee78a291fbf731baf0fe2046&w=740"
-                      className="d-block w-100 h-100"
-                      alt="Hug"
-                      style={{ height: "600px", width: "500px" }}
-                    />
-                    <div className="carousel-caption d-none d-md-block text-black">
-                      <h5>Organize seus produtos</h5>
-                      <p>Gerencie seu estoque de maneira rápida e eficiente.</p>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </section>
