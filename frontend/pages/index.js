@@ -18,7 +18,7 @@ export default function Home() {
         <main>
           <section>
             <nav
-              className="navbar primary col-12 navbar-expand-lg position-fixed bg-light text-black"
+              className="navbar bg-body-primary col-12 navbar-expand-lg position-fixed bg-light text-black"
               style={{ zIndex: 99, top: 0}}
             >
               <div className="container-fluid col-11 m-auto">
@@ -33,7 +33,6 @@ export default function Home() {
                 <button
                   className="navbar-toggler"
                   type="button"
-                  backgroundColor="#ffffcc"
                   data-bs-toggle="collapse"
                   data-bs-target="#navbarNav"
                   aria-controls="navbarNav"
