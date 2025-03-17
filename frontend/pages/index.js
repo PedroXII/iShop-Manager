@@ -18,8 +18,8 @@ export default function Home() {
         <main>
           <section>
             <nav
-              className="navbar bg-primary col-12 navbar-expand-lg position-fixed text-light"
-              style={{ zIndex: 99, top: 0, fontFamily: "lucida console, monaco"}}
+              className="navbar bg-primary text-light col-12 navbar-expand-lg position-fixed"
+              style={{ zIndex: 99, top: 0, fontFamily: "monaco, verdana"}}
             >
               <div className="container-fluid col-11 m-auto">
                 <Link href="#top">
