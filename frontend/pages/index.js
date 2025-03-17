@@ -69,7 +69,7 @@ export default function Home() {
             </nav>
           </section>
 
-          <section id="top">
+          <section style={{backgroundColor: "#ffffcc"}}>
             <div className="container row m-auto text-light">
               <Image
                 src="https://img.freepik.com/free-vector/true-friends-concept-illustration_114360-1730.jpg?t=st=1731791994~exp=1731795594~hmac=a9998890330280f1daaa992abf7e4b4e53086a9cafca0a3e3c083f0f787acc4e&w=740"
