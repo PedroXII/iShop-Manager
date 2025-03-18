@@ -69,7 +69,7 @@ export default function Home() {
             </nav>
           </section>
 
-          <section id="top" style={{backgroundColor: "#ffffcc"}}>
+          <section id="top" style={{backgroundColor: "#ffffcc"}} className="d-flex flex-column min-vh-100">
             <div className="container row m-auto">
               <Image
                 src="/43160.jpg"
@@ -90,7 +90,7 @@ export default function Home() {
           </section>
 
           <footer
-            className="d-flex justify-content-center mt-5"
+            className="d-flex justify-content-center mt-auto"
             id="bottom"
             style={{backgroundColor: "#ac7339"}}
           >
