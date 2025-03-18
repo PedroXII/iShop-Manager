@@ -1,0 +1,11 @@
+footer{
+  background-color: #ac7339;
+}
+body{
+  background-color: #ffffcc;
+}
+.navbar{
+  z-index: 99;
+  top: 0;
+  font-family: "monaco, verdana";
+}

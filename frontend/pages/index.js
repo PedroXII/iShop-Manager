@@ -18,6 +18,7 @@ export default function Home() {
         <main>
           <section>
             <nav
+            id="navbar"
               className="navbar bg-primary col-12 navbar-expand-lg position-fixed"
               style={{ zIndex: 99, top: 0, fontFamily: "monaco, verdana"}}
             >
@@ -69,7 +70,7 @@ export default function Home() {
             </nav>
           </section>
 
-          <section id="top" style={{backgroundColor: "#ffffcc"}} className="d-flex flex-column min-vh-100">
+          <section id="top" className="d-flex flex-column min-vh-100">
             <div className="container row m-auto">
               <Image
                 src="/43160.jpg"
@@ -90,9 +91,8 @@ export default function Home() {
           </section>
 
           <footer
-            className="d-flex justify-content-center mt-auto text-allign-center m-6"
+            className="d-flex justify-content-center mt-auto align-items-center py-3"
             id="bottom"
-            style={{backgroundColor: "#ac7339"}}
           >
             <p>&copy;iShop Manager 2025. Todos os direitos reservados.</p>
           </footer>
