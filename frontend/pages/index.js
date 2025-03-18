@@ -75,8 +75,8 @@ export default function Home() {
               <Image
                 src="/43160.jpg"
                 alt="Best friends hugging"
-                width={400}
-                height={400}
+                width={350}
+                height={350}
                 className="col-sm-6 col-6 img-fluid"
                 style={{ marginTop: "100px" }}
               />
@@ -91,7 +91,7 @@ export default function Home() {
           </section>
 
           <footer
-            className="d-flex justify-content-center mt-auto align-items-center py-3"
+            className="d-flex align-items-center justify-content-center py-2"
             id="bottom"
           >
             <p>&copy;iShop Manager 2025. Todos os direitos reservados.</p>
