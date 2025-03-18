@@ -24,7 +24,7 @@ export default function Home() {
               <div className="container-fluid col-11 m-auto">
                 <Link href="#top">
                   <Image
-                    src="frontend\public\Varios-12-150ppp-01.jpg"
+                    src="/Varios-12-150ppp-01.jpg"
                     alt="LOGO"
                     width={40}
                     height={40}
@@ -72,7 +72,7 @@ export default function Home() {
           <section id="top" style={{backgroundColor: "#ffffcc"}}>
             <div className="container row m-auto">
               <Image
-                src="frontend\public\43160.jpg"
+                src="/43160.jpg"
                 alt="Best friends hugging"
                 width={400}
                 height={400}
