@@ -90,7 +90,7 @@ export default function Home() {
           </section>
 
           <footer
-            className="d-flex justify-content-center mt-auto"
+            className="d-flex justify-content-center mt-auto text-allign-center m-6"
             id="bottom"
             style={{backgroundColor: "#ac7339"}}
           >
