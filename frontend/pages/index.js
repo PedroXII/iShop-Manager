@@ -136,7 +136,7 @@ export default function Home() {
             <div className="card" style={{ width: "18rem" }}>
               <Image src="/i-m-waiting-delivery-fresh-ingredients_329181-2910.jpg" alt="mulher_esperando_produtos" className="card-img-top" width={250} height={220} />
               <div className="card-body">
-                <h5 className="card-title">📦 Gestão de Pedidos</h5>
+                <h5 className="card-title">Gestão de Pedidos</h5>
                 <p className="card-text">
                 Monitore seus pedidos e garanta que seus clientes 
                 recebam seus produtos, sem complicações!
@@ -147,7 +147,7 @@ export default function Home() {
             <div className="card" style={{ width: "18rem" }}>
               <Image src="/women-shopping-buying-consumer-products-customer-day-celebration_23-2151623462.jpg" alt="idosa_fazendo_compras" className="card-img-top" width={250} height={220} />
               <div className="card-body">
-                <h5 className="card-title">🛒 Facilidade na Compra</h5>
+                <h5 className="card-title">Facilidade na Compra</h5>
                 <p className="card-text">
                   Otimize o processo de compra e garanta que seus 
                   clientes tenham uma experiência rápida, segura e 
@@ -159,7 +159,7 @@ export default function Home() {
             <div className="card" style={{ width: "18rem" }}>
               <Image src="/interior-large-distribution-warehouse-with-shelves-stacked-with-palettes-goods-ready-market_342744-1481.avif" alt="armazem" className="card-img-top" width={250} height={220} />
               <div className="card-body">
-                <h5 className="card-title">🏭 Logística Eficiente</h5>
+                <h5 className="card-title">Logística Eficiente</h5>
                 <p className="card-text">
                   Gerencie seus fornecedores, acompanhe seus produtos 
                   desde o estoque até a entrega e reduza custos operacionais.
