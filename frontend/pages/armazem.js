@@ -53,7 +53,7 @@ export default function Armazem() {
                       </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/armazem">
+                      <Link href="#top">
                         <a className="nav-link text-light">Armazém</a>
                       </Link>
                     </li>

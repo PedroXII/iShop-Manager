@@ -68,7 +68,7 @@ export default function LojaParceira() {
                       </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/loja_parceira">
+                      <Link href="#top">
                         <a className="nav-link text-light">Parceiro</a>
                       </Link>
                     </li>

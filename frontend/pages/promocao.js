@@ -58,7 +58,7 @@ export default function Promocao() {
                       </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/promocao">
+                      <Link href="#top">
                         <a className="nav-link text-light">Promoção</a>
                       </Link>
                     </li>

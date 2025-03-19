@@ -48,7 +48,7 @@ export default function Client() {
                       </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/cliente">
+                      <Link href="#top">
                         <a className="nav-link text-light">Cliente</a>
                       </Link>
                     </li>

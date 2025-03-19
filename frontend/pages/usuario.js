@@ -43,7 +43,7 @@ export default function Usuario() {
                 <div className="collapse navbar-collapse" id="navbarNav">
                   <ul className="navbar-nav ms-auto">
                     <li className="nav-item">
-                      <Link href="/usuario">
+                      <Link href="#top">
                         <a className="nav-link text-light">Usuário</a>
                       </Link>
                     </li>
