@@ -1,11 +1,87 @@
 import Link from "next/link";
 import Image from "next/image";
+import Head from "next/head";
 
 export default function Login() {
   return (
     //O front-end.
     <>
-      
+      <Head>
+        <title>iShop Manager: Login</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta charSet="UTF-8" />
+        <link rel="icon" href="/favicon.ico"/>
+      </Head>
+      <div>
+        <main>
+          <section>
+            <nav
+            id="navbar"
+              className="navbar bg-primary col-12 navbar-expand-lg position-fixed"
+              style={{ zIndex: 99, top: 0, fontFamily: "monaco, verdana"}}
+            >
+              <div className="container-fluid col-11 m-auto">
+                <Link href="#top">
+                  <Image
+                    src="/Varios-12-150ppp-01.jpg"
+                    alt="LOGO"
+                    width={40}
+                    height={40}
+                  />
+                </Link>
+                <button
+                  className="navbar-toggler"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#navbarNav"
+                  aria-controls="navbarNav"
+                  aria-expanded="false"
+                  aria-label="Toggle navigation"
+                >
+                  <span className="navbar-toggler-icon"></span>
+                </button>
+                <div className="collapse navbar-collapse" id="navbarNav">
+                  <ul className="navbar-nav ms-auto">
+                    <li className="nav-item">
+                      <Link href="#top">
+                        <a className="nav-link text-light">Home</a>
+                      </Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link href="/login">
+                        <a className="nav-link text-light">Login</a>
+                      </Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link href="/registro">
+                        <a className="nav-link text-light">Registre-se</a>
+                      </Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link href="#bottom">
+                        <a className="nav-link text-light">Sobre</a>
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </nav>
+          </section>
+
+          <section id="top" className="d-flex flex-column min-vh-100">
+            <div className="container row m-auto">
+              
+            </div>
+          </section>
+
+          <footer
+            className="d-flex align-items-center justify-content-center py-2"
+            id="bottom"
+          >
+            <p>&copy;iShop Manager 2025. Todos os direitos reservados.</p>
+          </footer>
+        </main>
+      </div>
     </>
   );
 }

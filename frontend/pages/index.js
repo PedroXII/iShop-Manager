@@ -13,7 +13,6 @@ export default function Home() {
         <meta charSet="UTF-8" />
         <link rel="icon" href="/favicon.ico"/>
       </Head>
-
       <div>
         <main>
           <section>
@@ -75,8 +74,8 @@ export default function Home() {
               <Image
                 src="/43160.jpg"
                 alt="Best friends hugging"
-                width={350}
-                height={350}
+                width={300}
+                height={300}
                 className="col-sm-6 col-6 img-fluid"
                 style={{ marginTop: "100px" }}
               />
