@@ -87,19 +87,19 @@ export default function Home() {
           </section>
 
           <section id="top" className="d-flex flex-column min-vh-100">
-            <div
-              className="container d-flex align-items-center col-6"
-              style={{ marginTop: "100px", textAlign: "justify" }}
-            >
-              Bem-vindo ao iShop Manager! Gerencie seus produtos e estoque de
-              forma eficiente e segura.
-              <div className="container row m-auto">
-                <Image
-                  src="/brand-loyalty-concept-illustration_114360-12422.avif"
-                  alt="Uma pessoa atraindo outras com um imã"
-                  className="col-sm-6 col-6 img-fluid"
-                  style={{ marginTop: "100px", width: "350px", height: "350px"}}
-                />
+            <div className="container row m-auto">
+              <div
+                className="container d-flex align-items-center col-6"
+                style={{ marginTop: "100px", textAlign: "justify" }}
+              >
+                Bem-vindo ao iShop Manager! Gerencie seus produtos e estoque de
+                forma eficiente e segura.
+              <Image
+                src="/brand-loyalty-concept-illustration_114360-12422.avif"
+                alt="Uma pessoa atraindo outras com um imã."
+                className="col-sm-6 col-6 img-fluid"
+                style={{ marginTop: "100px", width: "350px", height: "350px"}}
+              />
               </div>
             </div>
           </section>
@@ -107,7 +107,7 @@ export default function Home() {
           <section className="d-flex flex-column min-vh-100">
             <div className="container row m-auto">
               <Image
-                src="/public/Wavy_Bus-17_Single-09.jpg"
+                src="/Wavy_Bus-17_Single-09.jpg"
                 alt="Uma sacola com etiquetas de desconto"
                 className="col-sm-6 col-6 img-fluid"
                 style={{ marginTop: "100px", width: "350px", height: "350px"}}
