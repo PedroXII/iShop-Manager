@@ -136,7 +136,7 @@ export default function Home() {
             </div>
 
             <div className="card" style={{ width: "18rem" }}>
-              <Image src="/women-shopping-buying-consumer-products-customer-day-celebration_23-2151623462.jpg" alt="idosa_fazendo_compras" className="card-img-top" width={300} height={300} />
+              <Image src="/women-shopping-buying-consumer-products-customer-day-celebration_23-2151623462.jpg" alt="idosa_fazendo_compras" className="card-img-top" width={300} height={250} />
               <div className="card-body">
                 <h5 className="card-title">Produto Exemplo</h5>
                 <p className="card-text">
