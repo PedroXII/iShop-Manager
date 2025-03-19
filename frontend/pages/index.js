@@ -74,10 +74,9 @@ export default function Home() {
               <Image
                 src="/43160.jpg"
                 alt="Best friends hugging"
-                width={300}
-                height={300}
+                
                 className="col-sm-6 col-6 img-fluid"
-                style={{ marginTop: "100px" }}
+                style={{ marginTop: "100px", width: "300", height: "300"}}
               />
               <div
                 className="container d-flex align-items-center col-6"
