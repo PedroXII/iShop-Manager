@@ -94,15 +94,17 @@ export default function Home() {
               >
                 Bem-vindo ao iShop Manager! Gerencie seus produtos e estoque de
                 forma eficiente e segura.
+              </div>
               <Image
                 src="/brand-loyalty-concept-illustration_114360-12422.avif"
                 alt="Uma pessoa atraindo outras com um imã."
                 className="col-sm-6 col-6 img-fluid"
                 style={{ marginTop: "100px", width: "350px", height: "350px"}}
               />
-              </div>
             </div>
           </section>
+
+          
 
           <section className="d-flex flex-column min-vh-100">
             <div className="container row m-auto">
