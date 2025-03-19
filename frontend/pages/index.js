@@ -72,86 +72,86 @@ export default function Home() {
             <div className="container row m-auto">
               <Image
                 src="/43160.jpg"
-                alt="Best friends hugging"
+                alt="Uma loja rodeada por icones."
                 className="col-sm-6 col-6 img-fluid"
                 style={{ marginTop: "100px", width: "350px", height: "350px"}}
               />
-            </div>
-            <div
-              className="container d-flex align-items-center col-6"
-              style={{ marginTop: "100px", textAlign: "justify" }}
-            >
-              Bem-vindo ao iShop Manager! Gerencie seus produtos e estoque de
-              forma eficiente e segura.
-            </div>
-          </section>
-
-          <section id="top" className="d-flex flex-column min-vh-100">
-            <div
-              className="container d-flex align-items-center col-6"
-              style={{ marginTop: "100px", textAlign: "justify" }}
-            >
-              Bem-vindo ao iShop Manager! Gerencie seus produtos e estoque de
-              forma eficiente e segura.
-            </div>
-            <div className="container row m-auto">
-              <Image
-                src="/43160.jpg"
-                alt="Best friends hugging"
-                className="col-sm-6 col-6 img-fluid"
-                style={{ marginTop: "100px", width: "350px", height: "350px"}}
-              />
-            </div>
-          </section>
-
-          <section id="top" className="d-flex flex-column min-vh-100">
-            <div className="container row m-auto">
-              <Image
-                src="/43160.jpg"
-                alt="Best friends hugging"
-                className="col-sm-6 col-6 img-fluid"
-                style={{ marginTop: "100px", width: "350px", height: "350px"}}
-              />
-            </div>
-            <div
+              <div
                 className="container d-flex align-items-center col-6"
                 style={{ marginTop: "100px", textAlign: "justify" }}
               >
                 Bem-vindo ao iShop Manager! Gerencie seus produtos e estoque de
                 forma eficiente e segura.
+              </div>
             </div>
           </section>
 
-          <section id="Cards" className="container d-flex justify-content-center mt-5">
-              <div className="card" style={{ width: "18rem" }}>
-                <Image src="/i-m-waiting-delivery-fresh-ingredients_329181-2910.jpg" alt="mulher_esperando_produtos" className="card-img-top" width={288} height={180} />
-                <div className="card-body">
-                  <h5 className="card-title">Produto Exemplo</h5>
-                  <p className="card-text">
-                    Descrição curta do produto para exibição rápida.
-                  </p>
-                </div>
+          <section id="top" className="d-flex flex-column min-vh-100">
+            <div
+              className="container d-flex align-items-center col-6"
+              style={{ marginTop: "100px", textAlign: "justify" }}
+            >
+              Bem-vindo ao iShop Manager! Gerencie seus produtos e estoque de
+              forma eficiente e segura.
+              <div className="container row m-auto">
+                <Image
+                  src="/brand-loyalty-concept-illustration_114360-12422.avif"
+                  alt="Uma pessoa atraindo outras com um imã"
+                  className="col-sm-6 col-6 img-fluid"
+                  style={{ marginTop: "100px", width: "350px", height: "350px"}}
+                />
               </div>
+            </div>
+          </section>
 
-              <div className="card" style={{ width: "18rem" }}>
-                <Image src="/women-shopping-buying-consumer-products-customer-day-celebration_23-2151623462.jpg" alt="idosa_fazendo_compras" className="card-img-top" width={288} height={180} />
-                <div className="card-body">
-                  <h5 className="card-title">Produto Exemplo</h5>
-                  <p className="card-text">
-                    Descrição curta do produto para exibição rápida.
-                  </p>
-                </div>
+          <section className="d-flex flex-column min-vh-100">
+            <div className="container row m-auto">
+              <Image
+                src="/public/Wavy_Bus-17_Single-09.jpg"
+                alt="Uma sacola com etiquetas de desconto"
+                className="col-sm-6 col-6 img-fluid"
+                style={{ marginTop: "100px", width: "350px", height: "350px"}}
+              />
+              <div
+                  className="container d-flex align-items-center col-6"
+                  style={{ marginTop: "100px", textAlign: "justify" }}
+                >
+                  Bem-vindo ao iShop Manager! Gerencie seus produtos e estoque de
+                  forma eficiente e segura.
               </div>
+            </div>
+          </section>
 
-              <div className="card" style={{ width: "18rem" }}>
-                <Image src="/interior-large-distribution-warehouse-with-shelves-stacked-with-palettes-goods-ready-market_342744-1481.avif" alt="armazem" className="card-img-top" width={288} height={180} />
-                <div className="card-body">
-                  <h5 className="card-title">Produto Exemplo</h5>
-                  <p className="card-text">
-                    Descrição curta do produto para exibição rápida.
-                  </p>
-                </div>
+          <section id="Cards" className="container d-flex justify-content-center mt-5 mb-5">
+            <div className="card" style={{ width: "18rem" }}>
+              <Image src="/i-m-waiting-delivery-fresh-ingredients_329181-2910.jpg" alt="mulher_esperando_produtos" className="card-img-top" width={288} height={180} />
+              <div className="card-body">
+                <h5 className="card-title">Produto Exemplo</h5>
+                <p className="card-text">
+                  Descrição curta do produto para exibição rápida.
+                </p>
               </div>
+            </div>
+
+            <div className="card" style={{ width: "18rem" }}>
+              <Image src="/women-shopping-buying-consumer-products-customer-day-celebration_23-2151623462.jpg" alt="idosa_fazendo_compras" className="card-img-top" width={288} height={180} />
+              <div className="card-body">
+                <h5 className="card-title">Produto Exemplo</h5>
+                <p className="card-text">
+                  Descrição curta do produto para exibição rápida.
+                </p>
+              </div>
+            </div>
+
+            <div className="card" style={{ width: "18rem" }}>
+              <Image src="/interior-large-distribution-warehouse-with-shelves-stacked-with-palettes-goods-ready-market_342744-1481.avif" alt="armazem" className="card-img-top" width={288} height={180} />
+              <div className="card-body">
+                <h5 className="card-title">Produto Exemplo</h5>
+                <p className="card-text">
+                  Descrição curta do produto para exibição rápida.
+                </p>
+              </div>
+            </div>
           </section>
 
           <footer
