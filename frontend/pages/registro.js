@@ -7,6 +7,8 @@ export default function Registro() {
   // Estados do componente
   const [nivel, setNivel] = useState("Vendedor parceiro"); // Nível de acesso selecionado
   const [requerAutenticacao, setRequerAutenticacao] = useState(true); // Se precisa autenticar superior
+  const [criarLoja, setCriarLoja] = useState(false); // Se o usuário deve criar uma loja
+  const [lojas, setLojas] = useState([]); // Lista de lojas existentes
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -14,8 +16,36 @@ export default function Registro() {
     idade: "",
     superiorUsername: "",
     superiorPassword: "",
+    nomeLoja: "", // Nome da loja (se for criar uma nova)
+    lojaExistente: "", // Loja existente (se for selecionar uma)
   });
   const [error, setError] = useState(""); // Mensagem de erro
+
+  // Função para carregar as lojas existentes
+  const carregarLojas = async () => {
+    try {
+      const response = await fetch("/api/listar-lojas", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setLojas(data.lojas);
+      } else {
+        setError("Erro ao carregar lojas.");
+      }
+    } catch (error) {
+      setError("Erro ao conectar com o servidor.");
+    }
+  };
+
+  // Carregar lojas ao abrir o formulário
+  useEffect(() => {
+    carregarLojas();
+  }, []);
 
   // Função para atualizar o nível de acesso
   const handleNivelChange = (e) => {
@@ -23,6 +53,8 @@ export default function Registro() {
     setNivel(selectedNivel);
     // Se for "Primeiro Administrador", não requer autenticação de superior
     setRequerAutenticacao(selectedNivel !== "Primeiro Administrador");
+    // Se for "Primeiro Administrador" ou "Vendedor Parceiro", permitir criar loja
+    setCriarLoja(selectedNivel === "Primeiro Administrador" || selectedNivel === "Vendedor Parceiro");
   };
 
   // Função para atualizar os campos do formulário
@@ -46,6 +78,7 @@ export default function Registro() {
       password: formData.password,
       acess: nivel, // Nível de acesso
       idade: formData.idade,
+      loja: criarLoja ? formData.nomeLoja : formData.lojaExistente, // Loja associada
     };
 
     // Se necessário, autenticar o superior
@@ -172,6 +205,27 @@ export default function Registro() {
                       ))}
                     </div>
                   </div>
+
+                  {criarLoja && (
+                    <div className="mb-3">
+                      <label className="form-label">Nome da Loja</label>
+                      <input type="text" className="form-control" name="nomeLoja" value={formData.nomeLoja} onChange={handleChange} required />
+                    </div>
+                  )}
+
+                  {!criarLoja && (
+                    <div className="mb-3">
+                      <label className="form-label">Selecione a Loja</label>
+                      <select className="form-control" name="lojaExistente" value={formData.lojaExistente} onChange={handleChange} required>
+                        <option value="">Selecione uma loja</option>
+                        {lojas.map((loja) => (
+                          <option key={loja.objectId} value={loja.objectId}>
+                            {loja.nome}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
 
                   {requerAutenticacao && (
                     <div className="bg-white border p-3 rounded mb-3">
