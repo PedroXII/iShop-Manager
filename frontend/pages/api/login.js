@@ -30,8 +30,12 @@ export default async function handler(req, res) {
         console.log("Resposta do Back4App:", data);
   
         if (response.ok) {
-          // Retornar os dados do usuário autenticado
-          res.status(200).json({ message: "Login bem-sucedido!", user: data });
+          // Retornar os dados do usuário autenticado, incluindo o nível de acesso
+          res.status(200).json({
+            message: "Login bem-sucedido!",
+            user: data,
+            nivelAcesso: data.acess, // Nível de acesso do usuário
+          });
         } else {
           console.error("Erro ao fazer login:", data.error);
           res.status(400).json({ message: data.error || "Erro ao fazer login." });

@@ -35,8 +35,8 @@ export default function Login() {
       const data = await response.json();
 
       if (response.ok) {
-        // Redirecionar o usuário para a página inicial após o login
-        router.push("/");
+        // Redirecionar todos os usuários para a tela "Cliente"
+        router.push("/cliente");
       } else {
         setError(data.message || "Erro ao fazer login.");
       }
