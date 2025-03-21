@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import Head from "next/head";
-import { useState } from "react";
+import { useState, useEffect } from "react"; // Importe o useEffect
 
 export default function Registro() {
   // Estados do componente
