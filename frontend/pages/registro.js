@@ -4,8 +4,9 @@ import Head from "next/head";
 import { useState } from "react";
 
 export default function Registro() {
-  const [nivel, setNivel] = useState("Vendedor parceiro");
-  const [requerAutenticacao, setRequerAutenticacao] = useState(true);
+  // Estados do componente
+  const [nivel, setNivel] = useState("Vendedor parceiro"); // Nível de acesso selecionado
+  const [requerAutenticacao, setRequerAutenticacao] = useState(true); // Se precisa autenticar superior
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -14,9 +15,9 @@ export default function Registro() {
     superiorUsername: "",
     superiorPassword: "",
   });
+  const [error, setError] = useState(""); // Mensagem de erro
 
-  const [error, setError] = useState(""); // Estado para mensagens de erro
-
+  // Função para atualizar o nível de acesso
   const handleNivelChange = (e) => {
     const selectedNivel = e.target.value;
     setNivel(selectedNivel);
@@ -24,10 +25,12 @@ export default function Registro() {
     setRequerAutenticacao(selectedNivel !== "Primeiro Administrador");
   };
 
+  // Função para atualizar os campos do formulário
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Função para enviar o formulário
   const handleSubmit = async (e) => {
     e.preventDefault();
 
