@@ -1,12 +1,12 @@
 // pages/api/register.js
 export default async function handler(req, res) {
   if (req.method === "POST") {
-    const { username, password, acess, idade, loja, superiorUsername } = req.body;
+    const { username, password, acess, idade, loja, superiorUsername, superiorPassword } = req.body;
 
-    console.log("Dados recebidos:", { username, password, acess, idade, loja, superiorUsername });
+    console.log("Dados recebidos:", { username, password, acess, idade, loja, superiorUsername, superiorPassword });
 
     // Verificar se todos os campos obrigatórios estão presentes
-    if (!username || !password || !acess || !idade || !loja || !superiorUsername) {
+    if (!username || !password || !acess || !idade || !loja || !superiorUsername || !superiorPassword) {
       return res.status(400).json({ message: "Todos os campos são obrigatórios." });
     }
 
@@ -21,7 +21,7 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           username: superiorUsername,
-          password: req.body.superiorPassword, // Senha do superior
+          password: superiorPassword,
         }),
       });
 
@@ -50,7 +50,7 @@ export default async function handler(req, res) {
           password,
           acess,
           idade,
-          loja, // Associar o usuário à loja
+          loja,
         }),
       });
 

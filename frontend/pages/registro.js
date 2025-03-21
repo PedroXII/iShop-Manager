@@ -1,68 +1,61 @@
 import Link from "next/link";
 import Image from "next/image";
 import Head from "next/head";
-import { useState, useEffect } from "react"; // Importe o useEffect
+import { useState, useEffect } from "react"; // Certifique-se de que useEffect está importado
 
 export default function Registro() {
-  // Estados do componente
-  const [nivel, setNivel] = useState("Vendedor parceiro"); // Nível de acesso selecionado
-  const [requerAutenticacao, setRequerAutenticacao] = useState(true); // Se precisa autenticar superior
-  const [criarLoja, setCriarLoja] = useState(false); // Se o usuário deve criar uma loja
-  const [lojas, setLojas] = useState([]); // Lista de lojas existentes
+  const [nivel, setNivel] = useState("Vendedor parceiro");
+  const [requerAutenticacao, setRequerAutenticacao] = useState(true);
+  const [criarLoja, setCriarLoja] = useState(false);
+  const [lojas, setLojas] = useState([]);
   const [formData, setFormData] = useState({
     username: "",
     password: "",
-    confirmPassword: "", // Campo para confirmar senha
+    confirmPassword: "",
     idade: "",
     superiorUsername: "",
     superiorPassword: "",
-    nomeLoja: "", // Nome da loja (se for criar uma nova)
-    lojaExistente: "", // Loja existente (se for selecionar uma)
+    nomeLoja: "",
+    lojaExistente: "",
   });
-  const [error, setError] = useState(""); // Mensagem de erro
-
-  // Função para carregar as lojas existentes
-  const carregarLojas = async () => {
-    try {
-      const response = await fetch("/api/listar-lojas", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        setLojas(data.lojas);
-      } else {
-        setError("Erro ao carregar lojas.");
-      }
-    } catch (error) {
-      setError("Erro ao conectar com o servidor.");
-    }
-  };
+  const [error, setError] = useState("");
 
   // Carregar lojas ao abrir o formulário
   useEffect(() => {
+    const carregarLojas = async () => {
+      try {
+        const response = await fetch("/api/listar-lojas", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          setLojas(data.lojas);
+        } else {
+          setError("Erro ao carregar lojas.");
+        }
+      } catch (error) {
+        setError("Erro ao conectar com o servidor.");
+      }
+    };
+
     carregarLojas();
   }, []);
 
-  // Função para atualizar o nível de acesso
   const handleNivelChange = (e) => {
     const selectedNivel = e.target.value;
     setNivel(selectedNivel);
-    // Se for "Primeiro Administrador", não requer autenticação de superior
     setRequerAutenticacao(selectedNivel !== "Primeiro Administrador");
-    // Se for "Primeiro Administrador" ou "Vendedor Parceiro", permitir criar loja
     setCriarLoja(selectedNivel === "Primeiro Administrador" || selectedNivel === "Vendedor Parceiro");
   };
 
-  // Função para atualizar os campos do formulário
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Função para enviar o formulário
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -76,39 +69,13 @@ export default function Registro() {
     const userData = {
       username: formData.username,
       password: formData.password,
-      acess: nivel, // Nível de acesso
+      acess: nivel,
       idade: formData.idade,
-      loja: criarLoja ? formData.nomeLoja : formData.lojaExistente, // Loja associada
+      loja: criarLoja ? formData.nomeLoja : formData.lojaExistente,
+      superiorUsername: formData.superiorUsername,
+      superiorPassword: formData.superiorPassword,
     };
 
-    // Se necessário, autenticar o superior
-    if (requerAutenticacao) {
-      try {
-        // Verificar se o superior existe e tem permissão
-        const response = await fetch("/api/verify-superior", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            username: formData.superiorUsername,
-            password: formData.superiorPassword,
-            nivelRequerido: nivel === "Administrador" ? "Administrador" : "Primeiro Administrador",
-          }),
-        });
-
-        const data = await response.json();
-        if (!response.ok) {
-          setError("Erro: " + data.message);
-          return;
-        }
-      } catch (error) {
-        setError("Erro ao verificar superior.");
-        return;
-      }
-    }
-
-    // Criar o usuário no Back4App
     try {
       const response = await fetch("/api/register", {
         method: "POST",
