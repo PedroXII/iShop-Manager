@@ -1,8 +1,50 @@
 import Link from "next/link";
 import Image from "next/image";
 import Head from "next/head";
+import { useState } from "react";
+import { useRouter } from "next/router";
 
 export default function Login() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Verificar se todos os campos estão preenchidos
+    if (!username || !password) {
+      setError("Todos os campos são obrigatórios.");
+      return;
+    }
+
+    try {
+      // Fazer a requisição para a API de login
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Redirecionar o usuário para a página inicial após o login
+        router.push("/");
+      } else {
+        setError(data.message || "Erro ao fazer login.");
+      }
+    } catch (error) {
+      setError("Erro ao conectar com o servidor.");
+    }
+  };
+
   return (
     <>
       <Head>
@@ -16,9 +58,9 @@ export default function Login() {
           <section>
             <nav
               id="navbar"
-              className="navbar bg-primary col-12 navbar-expand-lg position-fixed"
+              className="col-12 navbar navbar-expand-lg bg-primary position-fixed"
             >
-              <div className="container-fluid col-11 m-auto">
+              <div className="col-11 container-fluid m-auto">
                 <Link href="/index">
                   <Image
                     src="/Varios-12-150ppp-01.jpg"
@@ -58,18 +100,35 @@ export default function Login() {
             </nav>
           </section>
 
-          <section id="top" className="d-flex flex-column min-vh-100 justify-content-center align-items-center">
+          <section id="top" className="d-flex flex-column align-items-center justify-content-center min-vh-100">
             <div className="container row m-auto">
-              <div className="col-md-6 mx-auto p-4 border rounded shadow bg-white">
+              <div className="col-md-6 bg-white border p-4 rounded shadow mx-auto">
                 <h2 className="text-center mb-4">Login</h2>
-                <form>
+                {error && <div className="alert alert-danger">{error}</div>}
+                <form onSubmit={handleSubmit}>
                   <div className="mb-3">
                     <label htmlFor="username" className="form-label">Nome de Usuário</label>
-                    <input type="text" className="form-control" id="username" placeholder="Digite seu nome de usuário" required />
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="username"
+                      placeholder="Digite seu nome de usuário"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      required
+                    />
                   </div>
                   <div className="mb-3">
                     <label htmlFor="password" className="form-label">Senha</label>
-                    <input type="password" className="form-control" id="password" placeholder="Digite sua senha" required />
+                    <input
+                      type="password"
+                      className="form-control"
+                      id="password"
+                      placeholder="Digite sua senha"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
                   </div>
                   <button type="submit" className="btn btn-primary w-100">Entrar</button>
                 </form>
