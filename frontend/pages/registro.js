@@ -9,14 +9,18 @@ export default function Registro() {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
+    confirmPassword: "", // Campo para confirmar senha
     idade: "",
     superiorUsername: "",
     superiorPassword: "",
   });
 
+  const [error, setError] = useState(""); // Estado para mensagens de erro
+
   const handleNivelChange = (e) => {
     const selectedNivel = e.target.value;
     setNivel(selectedNivel);
+    // Se for "Primeiro Administrador", não requer autenticação de superior
     setRequerAutenticacao(selectedNivel !== "Primeiro Administrador");
   };
 
@@ -27,16 +31,48 @@ export default function Registro() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validação de senha
+    if (formData.password !== formData.confirmPassword) {
+      setError("As senhas não coincidem.");
+      return;
+    }
+
+    // Dados do usuário a ser criado
     const userData = {
       username: formData.username,
       password: formData.password,
+      acess: nivel, // Nível de acesso
       idade: formData.idade,
-      nivel,
-      superior: requerAutenticacao
-        ? { username: formData.superiorUsername, password: formData.superiorPassword }
-        : null,
     };
 
+    // Se necessário, autenticar o superior
+    if (requerAutenticacao) {
+      try {
+        // Verificar se o superior existe e tem permissão
+        const response = await fetch("/api/verify-superior", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: formData.superiorUsername,
+            password: formData.superiorPassword,
+            nivelRequerido: nivel === "Administrador" ? "Administrador" : "Primeiro Administrador",
+          }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          setError("Erro: " + data.message);
+          return;
+        }
+      } catch (error) {
+        setError("Erro ao verificar superior.");
+        return;
+      }
+    }
+
+    // Criar o usuário no Back4App
     try {
       const response = await fetch("/api/register", {
         method: "POST",
@@ -50,10 +86,10 @@ export default function Registro() {
       if (response.ok) {
         alert("Usuário registrado com sucesso!");
       } else {
-        alert("Erro: " + data.message);
+        setError("Erro: " + data.message);
       }
     } catch (error) {
-      alert("Erro ao registrar usuário");
+      setError("Erro ao registrar usuário.");
     }
   };
 
@@ -100,6 +136,7 @@ export default function Registro() {
             <div className="container row m-auto mb-lg-5 mt-lg-5">
               <div className="col-md-6 bg-light border m-auto p-4 rounded">
                 <h2 className="text-center">Registro</h2>
+                {error && <div className="alert alert-danger">{error}</div>}
                 <form onSubmit={handleSubmit}>
                   <div className="mb-3">
                     <label className="form-label">Nome de Usuário</label>
@@ -109,6 +146,11 @@ export default function Registro() {
                   <div className="mb-3">
                     <label className="form-label">Senha</label>
                     <input type="password" className="form-control" name="password" value={formData.password} onChange={handleChange} required />
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label">Confirmar Senha</label>
+                    <input type="password" className="form-control" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required />
                   </div>
 
                   <div className="mb-3">
