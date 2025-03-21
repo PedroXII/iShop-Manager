@@ -97,7 +97,7 @@ export default function Registro() {
           </section>
 
           <section id="top" className="d-flex flex-column min-vh-100">
-            <div className="container row m-6">
+            <div className="container row m-auto mt-auto">
               <div className="col-md-6 bg-light border m-auto p-4 rounded">
                 <h2 className="text-center">Registro</h2>
                 <form onSubmit={handleSubmit}>
