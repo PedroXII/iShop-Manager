@@ -68,8 +68,8 @@ export default function Registro() {
       <div>
         <main>
           <section>
-            <nav id="navbar" className="navbar bg-primary col-12 navbar-expand-lg position-fixed">
-              <div className="container-fluid col-11 m-auto">
+            <nav id="navbar" className="col-12 navbar navbar-expand-lg bg-primary position-fixed">
+              <div className="col-11 container-fluid m-auto">
                 <Link href="/index">
                   <Image src="/Varios-12-150ppp-01.jpg" alt="LOGO" width={40} height={40} />
                 </Link>
@@ -97,8 +97,8 @@ export default function Registro() {
           </section>
 
           <section id="top" className="d-flex flex-column min-vh-100">
-            <div className="container row m-auto">
-              <div className="col-md-6 m-auto p-4 border rounded bg-light">
+            <div className="container row m-6">
+              <div className="col-md-6 bg-light border m-auto p-4 rounded">
                 <h2 className="text-center">Registro</h2>
                 <form onSubmit={handleSubmit}>
                   <div className="mb-3">
@@ -129,7 +129,7 @@ export default function Registro() {
                   </div>
 
                   {requerAutenticacao && (
-                    <div className="mb-3 border p-3 rounded bg-white">
+                    <div className="bg-white border p-3 rounded mb-3">
                       <h5>Autenticação do Superior</h5>
                       <div className="mb-2">
                         <label className="form-label">Nome de Usuário</label>
