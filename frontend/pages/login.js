@@ -35,6 +35,9 @@ export default function Login() {
       const data = await response.json();
 
       if (response.ok) {
+        // Armazenar a loja do usuário no localStorage
+        localStorage.setItem("loja", data.user.loja);
+
         // Redirecionar todos os usuários para a tela "Cliente"
         router.push("/cliente");
       } else {

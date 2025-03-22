@@ -35,6 +35,10 @@ export default async function handler(req, res) {
       else if (req.method === "POST") {
         const { nome, statusAssinatura, idade, comprasAnteriores, sexo, loja } = req.body;
   
+        if (!loja) {
+          throw new Error("O campo 'loja' é obrigatório.");
+        }
+  
         const body = JSON.stringify({
           nome,
           statusAssinatura: statusAssinatura || false,
