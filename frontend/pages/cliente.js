@@ -1,22 +1,134 @@
 import Link from "next/link";
 import Image from "next/image";
 import Head from "next/head";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 
 export default function Client() {
+  const [clientes, setClientes] = useState([]);
+  const [nome, setNome] = useState("");
+  const [statusAssinatura, setStatusAssinatura] = useState(false);
+  const [idade, setIdade] = useState(18);
+  const [comprasAnteriores, setComprasAnteriores] = useState([]);
+  const [sexo, setSexo] = useState("");
+  const [error, setError] = useState("");
+  const [editingCliente, setEditingCliente] = useState(null);
+  const router = useRouter();
+
+  // Carregar clientes da loja do usuário logado
+  useEffect(() => {
+    const fetchClientes = async () => {
+      try {
+        const response = await fetch("/api/clientes");
+        const data = await response.json();
+        if (response.ok) {
+          setClientes(data);
+        } else {
+          setError(data.message || "Erro ao carregar clientes.");
+        }
+      } catch (error) {
+        setError("Erro ao conectar com o servidor.");
+      }
+    };
+
+    fetchClientes();
+  }, []);
+
+  // Adicionar ou editar cliente
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const clienteData = {
+      nome,
+      statusAssinatura,
+      idade,
+      comprasAnteriores,
+      sexo,
+    };
+
+    try {
+      const url = editingCliente
+        ? `/api/clientes/${editingCliente.objectId}`
+        : "/api/clientes";
+      const method = editingCliente ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(clienteData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Atualizar a lista de clientes
+        if (editingCliente) {
+          setClientes(
+            clientes.map((c) =>
+              c.objectId === editingCliente.objectId ? data : c
+            )
+          );
+        } else {
+          setClientes([...clientes, data]);
+        }
+        // Limpar o formulário
+        setNome("");
+        setStatusAssinatura(false);
+        setIdade(18);
+        setComprasAnteriores([]);
+        setSexo("");
+        setEditingCliente(null);
+      } else {
+        setError(data.message || "Erro ao salvar cliente.");
+      }
+    } catch (error) {
+      setError("Erro ao conectar com o servidor.");
+    }
+  };
+
+  // Excluir cliente
+  const handleDelete = async (objectId) => {
+    try {
+      const response = await fetch(`/api/clientes/${objectId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setClientes(clientes.filter((c) => c.objectId !== objectId));
+      } else {
+        const data = await response.json();
+        setError(data.message || "Erro ao excluir cliente.");
+      }
+    } catch (error) {
+      setError("Erro ao conectar com o servidor.");
+    }
+  };
+
+  // Preencher formulário para edição
+  const handleEdit = (cliente) => {
+    setNome(cliente.nome);
+    setStatusAssinatura(cliente.statusAssinatura);
+    setIdade(cliente.idade);
+    setComprasAnteriores(cliente.comprasAnteriores || []);
+    setSexo(cliente.sexo || "");
+    setEditingCliente(cliente);
+  };
+
   return (
-    //O front-end.
     <>
       <Head>
         <title>iShop Manager: Clientes</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta charSet="UTF-8" />
-        <link rel="icon" href="/favicon.ico"/>
+        <link rel="icon" href="/favicon.ico" />
       </Head>
       <div>
         <main>
           <section>
             <nav
-            id="navbar"
+              id="navbar"
               className="navbar bg-primary col-12 navbar-expand-lg position-fixed"
             >
               <div className="container-fluid col-11 m-auto">
@@ -79,7 +191,93 @@ export default function Client() {
 
           <section id="top" className="d-flex flex-column min-vh-100">
             <div className="container row m-auto">
-              
+              <div className="col-md-8 mx-auto mt-5">
+                <h2 className="text-center mb-4">Clientes</h2>
+                {error && <div className="alert alert-danger">{error}</div>}
+
+                {/* Formulário para adicionar/editar cliente */}
+                <form onSubmit={handleSubmit} className="mb-4">
+                  <div className="mb-3">
+                    <label htmlFor="nome" className="form-label">Nome</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="nome"
+                      placeholder="Digite o nome do cliente"
+                      value={nome}
+                      onChange={(e) => setNome(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label htmlFor="idade" className="form-label">Idade</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      id="idade"
+                      placeholder="Digite a idade do cliente"
+                      value={idade}
+                      onChange={(e) => setIdade(Number(e.target.value))}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label htmlFor="sexo" className="form-label">Sexo</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="sexo"
+                      placeholder="Digite o sexo do cliente"
+                      value={sexo}
+                      onChange={(e) => setSexo(e.target.value)}
+                    />
+                  </div>
+                  <div className="mb-3 form-check">
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      id="statusAssinatura"
+                      checked={statusAssinatura}
+                      onChange={(e) => setStatusAssinatura(e.target.checked)}
+                    />
+                    <label htmlFor="statusAssinatura" className="form-check-label">Status de Assinatura</label>
+                  </div>
+                  <button type="submit" className="btn btn-primary w-100">
+                    {editingCliente ? "Atualizar Cliente" : "Adicionar Cliente"}
+                  </button>
+                </form>
+
+                {/* Lista de clientes */}
+                <div className="list-group">
+                  {clientes.map((cliente) => (
+                    <div
+                      key={cliente.objectId}
+                      className="list-group-item d-flex justify-content-between align-items-center"
+                    >
+                      <div>
+                        <h5>{cliente.nome}</h5>
+                        <p>Idade: {cliente.idade}</p>
+                        <p>Sexo: {cliente.sexo}</p>
+                        <p>Assinatura: {cliente.statusAssinatura ? "Ativa" : "Inativa"}</p>
+                      </div>
+                      <div>
+                        <button
+                          className="btn btn-warning btn-sm me-2"
+                          onClick={() => handleEdit(cliente)}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleDelete(cliente.objectId)}
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </section>
 
