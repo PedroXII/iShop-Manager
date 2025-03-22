@@ -29,6 +29,7 @@ export default async function handler(req, res) {
 
       // Se o superior não for encontrado ou a senha estiver incorreta
       if (!response.ok) {
+        console.error("Erro ao verificar superior:", data);
         return res.status(400).json({ message: "Superior não encontrado ou senha incorreta." });
       }
 

@@ -10,6 +10,11 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: "Todos os campos são obrigatórios." });
     }
 
+    // Validação básica de senha (mínimo 6 caracteres)
+    if (password.length < 6) {
+      return res.status(400).json({ message: "A senha deve ter no mínimo 6 caracteres." });
+    }
+
     try {
       // Verificar se o superior pertence à mesma loja
       const responseSuperior = await fetch("https://parseapi.back4app.com/login", {
@@ -29,6 +34,7 @@ export default async function handler(req, res) {
 
       // Se o superior não for encontrado ou a senha estiver incorreta
       if (!responseSuperior.ok) {
+        console.error("Erro ao verificar superior:", dataSuperior);
         return res.status(400).json({ message: "Superior não encontrado ou senha incorreta." });
       }
 
@@ -60,6 +66,7 @@ export default async function handler(req, res) {
       if (response.ok) {
         res.status(200).json({ message: "Usuário registrado com sucesso!" });
       } else {
+        console.error("Erro ao criar usuário:", data);
         res.status(400).json({ message: data.error || "Erro ao registrar usuário." });
       }
     } catch (error) {

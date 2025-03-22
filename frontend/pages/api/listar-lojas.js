@@ -18,6 +18,7 @@ export default async function handler(req, res) {
           // Retornar a lista de lojas
           res.status(200).json({ lojas: data.results });
         } else {
+          console.error("Erro ao listar lojas:", data);
           res.status(400).json({ message: "Erro ao carregar lojas." });
         }
       } catch (error) {

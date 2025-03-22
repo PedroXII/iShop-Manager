@@ -1,13 +1,14 @@
 import Link from "next/link";
 import Image from "next/image";
 import Head from "next/head";
-import { useState, useEffect } from "react"; // Certifique-se de que useEffect está importado
+import { useState, useEffect } from "react";
 
 export default function Registro() {
   const [nivel, setNivel] = useState("Vendedor parceiro");
   const [requerAutenticacao, setRequerAutenticacao] = useState(true);
   const [criarLoja, setCriarLoja] = useState(false);
   const [lojas, setLojas] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -39,6 +40,8 @@ export default function Registro() {
         }
       } catch (error) {
         setError("Erro ao conectar com o servidor.");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -89,7 +92,7 @@ export default function Registro() {
       if (response.ok) {
         alert("Usuário registrado com sucesso!");
       } else {
-        setError("Erro: " + data.message);
+        setError("Erro: " + (data.message || "Erro ao registrar usuário."));
       }
     } catch (error) {
       setError("Erro ao registrar usuário.");
@@ -140,6 +143,7 @@ export default function Registro() {
               <div className="col-md-6 bg-light border m-auto p-4 rounded">
                 <h2 className="text-center">Registro</h2>
                 {error && <div className="alert alert-danger">{error}</div>}
+                {loading && <div className="alert alert-info">Carregando lojas...</div>}
                 <form onSubmit={handleSubmit}>
                   <div className="mb-3">
                     <label className="form-label">Nome de Usuário</label>
