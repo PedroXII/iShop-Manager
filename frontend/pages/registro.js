@@ -73,7 +73,7 @@ export default function Registro() {
       username: formData.username,
       password: formData.password,
       acess: nivel,
-      idade: formData.idade,
+      idade: Number(formData.idade), // Garantir que a idade seja um número
       loja: criarLoja ? formData.nomeLoja : formData.lojaExistente,
     };
 

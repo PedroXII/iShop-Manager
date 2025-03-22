@@ -45,7 +45,35 @@ export default async function handler(req, res) {
         }
       }
 
-      // Criar o novo usuário no Back4App (sem os campos superiorUsername e superiorPassword)
+      // Criar a loja se o usuário for o Primeiro Administrador
+      let lojaId = loja; // Armazenará o ID da loja existente ou criada
+
+      if (acess === "Primeiro Administrador") {
+        const responseLoja = await fetch("https://parseapi.back4app.com/classes/Loja", {
+          method: "POST",
+          headers: {
+            "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
+            "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            nome: loja,
+            tipo: "Loja Principal",
+            administrador: username,
+          }),
+        });
+
+        const dataLoja = await responseLoja.json();
+
+        if (!responseLoja.ok) {
+          console.error("Erro ao criar loja:", dataLoja);
+          return res.status(400).json({ message: "Erro ao criar loja." });
+        }
+
+        lojaId = dataLoja.objectId; // Usar o ID da loja criada
+      }
+
+      // Criar o novo usuário no Back4App
       const response = await fetch("https://parseapi.back4app.com/users", {
         method: "POST",
         headers: {
@@ -57,8 +85,8 @@ export default async function handler(req, res) {
           username,
           password,
           acess,
-          idade,
-          loja,
+          idade: Number(idade), // Garantir que a idade seja um número
+          loja: lojaId, // Usar o ID da loja criada ou existente
         }),
       });
 
