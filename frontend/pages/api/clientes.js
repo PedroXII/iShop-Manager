@@ -1,5 +1,4 @@
 // pages/api/clientes.js
-
 export default async function handler(req, res) {
     const BASE_URL = "https://parseapi.back4app.com/classes/Cliente";
     const APP_ID = process.env.BACK4APP_APP_ID;
@@ -22,7 +21,9 @@ export default async function handler(req, res) {
         });
   
         if (!response.ok) {
-          throw new Error("Erro ao carregar clientes.");
+          const errorData = await response.json();
+          console.error("Erro ao carregar clientes:", errorData);
+          throw new Error(errorData.message || "Erro ao carregar clientes.");
         }
   
         const data = await response.json();
@@ -32,7 +33,7 @@ export default async function handler(req, res) {
   
       // Adicionar Cliente (POST)
       else if (req.method === "POST") {
-        const { nome, statusAssinatura, idade, comprasAnteriores, sexo } = req.body;
+        const { nome, statusAssinatura, idade, comprasAnteriores, sexo, loja } = req.body;
   
         const body = JSON.stringify({
           nome,
@@ -40,7 +41,10 @@ export default async function handler(req, res) {
           idade: idade || 18,
           comprasAnteriores: comprasAnteriores || [],
           sexo: sexo || "",
+          loja, // Campo obrigatório
         });
+  
+        console.log("Corpo da requisição:", body);
   
         const response = await fetch(BASE_URL, {
           method: "POST",
@@ -49,7 +53,9 @@ export default async function handler(req, res) {
         });
   
         if (!response.ok) {
-          throw new Error("Erro ao adicionar cliente.");
+          const errorData = await response.json();
+          console.error("Erro ao adicionar cliente:", errorData);
+          throw new Error(errorData.message || "Erro ao adicionar cliente.");
         }
   
         const data = await response.json();
@@ -77,7 +83,9 @@ export default async function handler(req, res) {
         });
   
         if (!response.ok) {
-          throw new Error("Erro ao atualizar cliente.");
+          const errorData = await response.json();
+          console.error("Erro ao atualizar cliente:", errorData);
+          throw new Error(errorData.message || "Erro ao atualizar cliente.");
         }
   
         const data = await response.json();
@@ -95,7 +103,9 @@ export default async function handler(req, res) {
         });
   
         if (!response.ok) {
-          throw new Error("Erro ao excluir cliente.");
+          const errorData = await response.json();
+          console.error("Erro ao excluir cliente:", errorData);
+          throw new Error(errorData.message || "Erro ao excluir cliente.");
         }
   
         console.log("Cliente excluído:", objectId);

@@ -90,7 +90,7 @@ export default function Home() {
             </div>
           </section>
 
-          <section id="top" className="d-flex flex-column min-vh-100">
+          <section id="top2" className="d-flex flex-column min-vh-100">
             <div className="container row m-2">
               <div
                 className="container d-flex align-items-center col-6"
