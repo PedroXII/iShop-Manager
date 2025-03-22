@@ -21,7 +21,7 @@ export default function Registro() {
   });
   const [error, setError] = useState("");
 
-  // Carregar lojas ao abrir o formulário
+  // Carregar lojas ao abrir o formulário (executado apenas no cliente)
   useEffect(() => {
     const carregarLojas = async () => {
       try {
@@ -143,77 +143,80 @@ export default function Registro() {
               <div className="col-md-6 bg-light border m-auto p-4 rounded">
                 <h2 className="text-center">Registro</h2>
                 {error && <div className="alert alert-danger">{error}</div>}
-                {loading && <div className="alert alert-info">Carregando lojas...</div>}
-                <form onSubmit={handleSubmit}>
-                  <div className="mb-3">
-                    <label className="form-label">Nome de Usuário</label>
-                    <input type="text" className="form-control" name="username" value={formData.username} onChange={handleChange} required />
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Senha</label>
-                    <input type="password" className="form-control" name="password" value={formData.password} onChange={handleChange} required />
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Confirmar Senha</label>
-                    <input type="password" className="form-control" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required />
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Idade</label>
-                    <input type="number" className="form-control" name="idade" value={formData.idade} onChange={handleChange} required />
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Nível de Acesso</label>
-                    <div>
-                      {["Vendedor parceiro", "Funcionário", "Administrador", "Primeiro Administrador"].map((opcao) => (
-                        <div className="form-check" key={opcao}>
-                          <input className="form-check-input" type="radio" name="nivel" value={opcao} checked={nivel === opcao} onChange={handleNivelChange} />
-                          <label className="form-check-label">{opcao}</label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {criarLoja && (
+                {loading ? (
+                  <div className="alert alert-info">Carregando lojas...</div>
+                ) : (
+                  <form onSubmit={handleSubmit}>
                     <div className="mb-3">
-                      <label className="form-label">Nome da Loja</label>
-                      <input type="text" className="form-control" name="nomeLoja" value={formData.nomeLoja} onChange={handleChange} required />
+                      <label className="form-label">Nome de Usuário</label>
+                      <input type="text" className="form-control" name="username" value={formData.username} onChange={handleChange} required />
                     </div>
-                  )}
 
-                  {!criarLoja && (
                     <div className="mb-3">
-                      <label className="form-label">Selecione a Loja</label>
-                      <select className="form-control" name="lojaExistente" value={formData.lojaExistente} onChange={handleChange} required>
-                        <option value="">Selecione uma loja</option>
-                        {lojas.map((loja) => (
-                          <option key={loja.objectId} value={loja.objectId}>
-                            {loja.nome}
-                          </option>
+                      <label className="form-label">Senha</label>
+                      <input type="password" className="form-control" name="password" value={formData.password} onChange={handleChange} required />
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">Confirmar Senha</label>
+                      <input type="password" className="form-control" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required />
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">Idade</label>
+                      <input type="number" className="form-control" name="idade" value={formData.idade} onChange={handleChange} required />
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">Nível de Acesso</label>
+                      <div>
+                        {["Vendedor parceiro", "Funcionário", "Administrador", "Primeiro Administrador"].map((opcao) => (
+                          <div className="form-check" key={opcao}>
+                            <input className="form-check-input" type="radio" name="nivel" value={opcao} checked={nivel === opcao} onChange={handleNivelChange} />
+                            <label className="form-check-label">{opcao}</label>
+                          </div>
                         ))}
-                      </select>
-                    </div>
-                  )}
-
-                  {requerAutenticacao && (
-                    <div className="bg-white border p-3 rounded mb-3">
-                      <h5>Autenticação do Superior</h5>
-                      <div className="mb-2">
-                        <label className="form-label">Nome de Usuário</label>
-                        <input type="text" className="form-control" name="superiorUsername" value={formData.superiorUsername} onChange={handleChange} required />
-                      </div>
-                      <div className="mb-2">
-                        <label className="form-label">Senha</label>
-                        <input type="password" className="form-control" name="superiorPassword" value={formData.superiorPassword} onChange={handleChange} required />
                       </div>
                     </div>
-                  )}
 
-                  <button type="submit" className="btn btn-primary w-100">Registrar</button>
-                </form>
+                    {criarLoja && (
+                      <div className="mb-3">
+                        <label className="form-label">Nome da Loja</label>
+                        <input type="text" className="form-control" name="nomeLoja" value={formData.nomeLoja} onChange={handleChange} required />
+                      </div>
+                    )}
+
+                    {!criarLoja && (
+                      <div className="mb-3">
+                        <label className="form-label">Selecione a Loja</label>
+                        <select className="form-control" name="lojaExistente" value={formData.lojaExistente} onChange={handleChange} required>
+                          <option value="">Selecione uma loja</option>
+                          {lojas.map((loja) => (
+                            <option key={loja.objectId} value={loja.objectId}>
+                              {loja.nome}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {requerAutenticacao && (
+                      <div className="bg-white border p-3 rounded mb-3">
+                        <h5>Autenticação do Superior</h5>
+                        <div className="mb-2">
+                          <label className="form-label">Nome de Usuário</label>
+                          <input type="text" className="form-control" name="superiorUsername" value={formData.superiorUsername} onChange={handleChange} required />
+                        </div>
+                        <div className="mb-2">
+                          <label className="form-label">Senha</label>
+                          <input type="password" className="form-control" name="superiorPassword" value={formData.superiorPassword} onChange={handleChange} required />
+                        </div>
+                      </div>
+                    )}
+
+                    <button type="submit" className="btn btn-primary w-100">Registrar</button>
+                  </form>
+                )}
               </div>
             </div>
           </section>
