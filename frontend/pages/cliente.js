@@ -330,33 +330,39 @@ export default function Client() {
 
                 {/* Lista de clientes */}
                 <div className="list-group">
-                  {filteredClientes.map((cliente) => (
-                    <div
-                      key={cliente.objectId}
-                      className="list-group-item d-flex justify-content-between align-items-center"
-                    >
-                      <div>
-                        <h5>{cliente.nome}</h5>
-                        <p>Idade: {cliente.idade}</p>
-                        <p>Sexo: {cliente.sexo}</p>
-                        <p>Assinatura: {cliente.statusAssinatura ? "Ativa" : "Inativa"}</p>
+                  {filteredClientes.length > 0 ? (
+                    filteredClientes.map((cliente) => (
+                      <div
+                        key={cliente.objectId}
+                        className="list-group-item d-flex justify-content-between align-items-center"
+                      >
+                        <div>
+                          <h5>{cliente.nome}</h5>
+                          <p>Idade: {cliente.idade}</p>
+                          <p>Sexo: {cliente.sexo}</p>
+                          <p>Assinatura: {cliente.statusAssinatura ? "Ativa" : "Inativa"}</p>
+                        </div>
+                        <div>
+                          <button
+                            className="btn btn-warning btn-sm me-2"
+                            onClick={() => handleEdit(cliente)}
+                          >
+                            Editar
+                          </button>
+                          <button
+                            className="btn btn-danger btn-sm"
+                            onClick={() => handleDelete(cliente.objectId)}
+                          >
+                            Excluir
+                          </button>
+                        </div>
                       </div>
-                      <div>
-                        <button
-                          className="btn btn-warning btn-sm me-2"
-                          onClick={() => handleEdit(cliente)}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => handleDelete(cliente.objectId)}
-                        >
-                          Excluir
-                        </button>
-                      </div>
+                    ))
+                  ) : (
+                    <div className="alert alert-info">
+                      Nenhum cliente encontrado com os filtros aplicados.
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
