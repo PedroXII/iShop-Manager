@@ -70,7 +70,11 @@ export default async function handler(req, res) {
       // Editar Cliente (PUT)
       else if (req.method === "PUT") {
         const { objectId } = req.query;
-        const { nome, statusAssinatura, idade, comprasAnteriores, sexo } = req.body;
+        const { nome, statusAssinatura, idade, comprasAnteriores, sexo, loja } = req.body;
+  
+        if (!objectId) {
+          throw new Error("O campo 'objectId' é obrigatório para edição.");
+        }
   
         const body = JSON.stringify({
           nome,
@@ -78,6 +82,7 @@ export default async function handler(req, res) {
           idade,
           comprasAnteriores,
           sexo,
+          loja, // Incluindo o campo 'loja' na edição
         });
   
         const response = await fetch(`${BASE_URL}/${objectId}`, {
@@ -101,6 +106,10 @@ export default async function handler(req, res) {
       else if (req.method === "DELETE") {
         const { objectId } = req.query;
   
+        if (!objectId) {
+          throw new Error("O campo 'objectId' é obrigatório para exclusão.");
+        }
+  
         const response = await fetch(`${BASE_URL}/${objectId}`, {
           method: "DELETE",
           headers,
@@ -122,6 +131,6 @@ export default async function handler(req, res) {
       }
     } catch (error) {
       console.error("Erro na API:", error.message);
-      res.status(500).json({ message: error.message });
+      res.status(500).json({ message: error.message || "Erro interno no servidor." });
     }
   }

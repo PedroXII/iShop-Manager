@@ -13,6 +13,10 @@ export default function Client() {
   const [sexo, setSexo] = useState("");
   const [error, setError] = useState("");
   const [editingCliente, setEditingCliente] = useState(null);
+  const [searchNome, setSearchNome] = useState("");
+  const [searchIdade, setSearchIdade] = useState("");
+  const [searchSexo, setSearchSexo] = useState("");
+  const [searchStatusAssinatura, setSearchStatusAssinatura] = useState("");
   const router = useRouter();
 
   // Carregar clientes da loja do usuário logado
@@ -56,7 +60,7 @@ export default function Client() {
 
     try {
       const url = editingCliente
-        ? `/api/clientes/${editingCliente.objectId}`
+        ? `/api/clientes?objectId=${editingCliente.objectId}`
         : "/api/clientes";
       const method = editingCliente ? "PUT" : "POST";
 
@@ -99,7 +103,7 @@ export default function Client() {
   // Excluir cliente
   const handleDelete = async (objectId) => {
     try {
-      const response = await fetch(`/api/clientes/${objectId}`, {
+      const response = await fetch(`/api/clientes?objectId=${objectId}`, {
         method: "DELETE",
       });
 
@@ -123,6 +127,19 @@ export default function Client() {
     setSexo(cliente.sexo || "");
     setEditingCliente(cliente);
   };
+
+  // Filtrar clientes com base nos critérios de pesquisa
+  const filteredClientes = clientes.filter((cliente) => {
+    return (
+      (searchNome === "" ||
+        cliente.nome.toLowerCase().includes(searchNome.toLowerCase())) &&
+      (searchIdade === "" || cliente.idade === Number(searchIdade)) &&
+      (searchSexo === "" ||
+        cliente.sexo.toLowerCase().includes(searchSexo.toLowerCase())) &&
+      (searchStatusAssinatura === "" ||
+        cliente.statusAssinatura === (searchStatusAssinatura === "true"))
+    );
+  });
 
   return (
     <>
@@ -255,9 +272,65 @@ export default function Client() {
                   </button>
                 </form>
 
+                {/* Área de pesquisa e filtros */}
+                <div className="mb-4">
+                  <h3>Pesquisar Clientes</h3>
+                  <div className="row">
+                    <div className="col-md-3">
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Nome"
+                        value={searchNome}
+                        onChange={(e) => setSearchNome(e.target.value)}
+                      />
+                    </div>
+                    <div className="col-md-3">
+                      <input
+                        type="number"
+                        className="form-control"
+                        placeholder="Idade"
+                        value={searchIdade}
+                        onChange={(e) => setSearchIdade(e.target.value)}
+                      />
+                    </div>
+                    <div className="col-md-3">
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Sexo"
+                        value={searchSexo}
+                        onChange={(e) => setSearchSexo(e.target.value)}
+                      />
+                    </div>
+                    <div className="col-md-3">
+                      <select
+                        className="form-control"
+                        value={searchStatusAssinatura}
+                        onChange={(e) => setSearchStatusAssinatura(e.target.value)}
+                      >
+                        <option value="">Status de Assinatura</option>
+                        <option value="true">Ativa</option>
+                        <option value="false">Inativa</option>
+                      </select>
+                    </div>
+                  </div>
+                  <button
+                    className="btn btn-secondary mt-2"
+                    onClick={() => {
+                      setSearchNome("");
+                      setSearchIdade("");
+                      setSearchSexo("");
+                      setSearchStatusAssinatura("");
+                    }}
+                  >
+                    Limpar Filtros
+                  </button>
+                </div>
+
                 {/* Lista de clientes */}
                 <div className="list-group">
-                  {clientes.map((cliente) => (
+                  {filteredClientes.map((cliente) => (
                     <div
                       key={cliente.objectId}
                       className="list-group-item d-flex justify-content-between align-items-center"
