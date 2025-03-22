@@ -1,4 +1,4 @@
-import Parse from "parse/node";
+import Parse from "parse"; // Corrigido aqui
 
 // Configuração do Parse (Back4App)
 Parse.initialize(
