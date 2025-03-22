@@ -18,31 +18,35 @@ export default function Client() {
   const [searchSexo, setSearchSexo] = useState("");
   const [searchStatusAssinatura, setSearchStatusAssinatura] = useState("");
   const [showResults, setShowResults] = useState(false);
+  const [loja, setLoja] = useState(null); // Novo estado para armazenar a loja
   const router = useRouter();
 
-  // Obter a loja do usuário logado
-  const loja = localStorage.getItem("loja");
+  // Carregar a loja do usuário logado apenas no lado do cliente
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const loja = localStorage.getItem("loja");
+      setLoja(loja);
+    }
+  }, []);
 
   // Carregar clientes da loja do usuário logado
   useEffect(() => {
-    const fetchClientes = async () => {
-      try {
-        const response = await fetch(`/api/clientes?loja=${loja}`);
-        const data = await response.json();
-        if (response.ok) {
-          setClientes(data);
-        } else {
-          setError(data.message || "Erro ao carregar clientes.");
-        }
-      } catch (error) {
-        setError("Erro ao conectar com o servidor.");
-      }
-    };
-
     if (loja) {
+      const fetchClientes = async () => {
+        try {
+          const response = await fetch(`/api/clientes?loja=${loja}`);
+          const data = await response.json();
+          if (response.ok) {
+            setClientes(data);
+          } else {
+            setError(data.message || "Erro ao carregar clientes.");
+          }
+        } catch (error) {
+          setError("Erro ao conectar com o servidor.");
+        }
+      };
+
       fetchClientes();
-    } else {
-      setError("Loja não encontrada. Faça login novamente.");
     }
   }, [loja]);
 
