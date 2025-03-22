@@ -17,6 +17,7 @@ export default function Client() {
   const [searchIdade, setSearchIdade] = useState("");
   const [searchSexo, setSearchSexo] = useState("");
   const [searchStatusAssinatura, setSearchStatusAssinatura] = useState("");
+  const [showResults, setShowResults] = useState(false); // Novo estado para controlar a exibição dos resultados
   const router = useRouter();
 
   // Carregar clientes da loja do usuário logado
@@ -140,6 +141,11 @@ export default function Client() {
         cliente.statusAssinatura === (searchStatusAssinatura === "true"))
     );
   });
+
+  // Função para lidar com a pesquisa
+  const handleSearch = () => {
+    setShowResults(true); // Mostrar resultados após a pesquisa
+  };
 
   return (
     <>
@@ -322,48 +328,57 @@ export default function Client() {
                       setSearchIdade("");
                       setSearchSexo("");
                       setSearchStatusAssinatura("");
+                      setShowResults(false); // Limpar resultados ao limpar filtros
                     }}
                   >
                     Limpar Filtros
                   </button>
+                  <button
+                    className="btn btn-primary mt-2 ms-2"
+                    onClick={handleSearch} // Executar a pesquisa
+                  >
+                    Pesquisar
+                  </button>
                 </div>
 
-                {/* Lista de clientes */}
-                <div className="list-group">
-                  {filteredClientes.length > 0 ? (
-                    filteredClientes.map((cliente) => (
-                      <div
-                        key={cliente.objectId}
-                        className="list-group-item d-flex justify-content-between align-items-center"
-                      >
-                        <div>
-                          <h5>{cliente.nome}</h5>
-                          <p>Idade: {cliente.idade}</p>
-                          <p>Sexo: {cliente.sexo}</p>
-                          <p>Assinatura: {cliente.statusAssinatura ? "Ativa" : "Inativa"}</p>
+                {/* Lista de clientes (só aparece após a pesquisa) */}
+                {showResults && (
+                  <div className="list-group">
+                    {filteredClientes.length > 0 ? (
+                      filteredClientes.map((cliente) => (
+                        <div
+                          key={cliente.objectId}
+                          className="list-group-item d-flex justify-content-between align-items-center"
+                        >
+                          <div>
+                            <h5>{cliente.nome}</h5>
+                            <p>Idade: {cliente.idade}</p>
+                            <p>Sexo: {cliente.sexo}</p>
+                            <p>Assinatura: {cliente.statusAssinatura ? "Ativa" : "Inativa"}</p>
+                          </div>
+                          <div>
+                            <button
+                              className="btn btn-warning btn-sm me-2"
+                              onClick={() => handleEdit(cliente)}
+                            >
+                              Editar
+                            </button>
+                            <button
+                              className="btn btn-danger btn-sm"
+                              onClick={() => handleDelete(cliente.objectId)}
+                            >
+                              Excluir
+                            </button>
+                          </div>
                         </div>
-                        <div>
-                          <button
-                            className="btn btn-warning btn-sm me-2"
-                            onClick={() => handleEdit(cliente)}
-                          >
-                            Editar
-                          </button>
-                          <button
-                            className="btn btn-danger btn-sm"
-                            onClick={() => handleDelete(cliente.objectId)}
-                          >
-                            Excluir
-                          </button>
-                        </div>
+                      ))
+                    ) : (
+                      <div className="alert alert-info">
+                        Nenhum cliente encontrado com os filtros aplicados.
                       </div>
-                    ))
-                  ) : (
-                    <div className="alert alert-info">
-                      Nenhum cliente encontrado com os filtros aplicados.
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </section>
