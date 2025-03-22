@@ -38,12 +38,20 @@ export default function Client() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const loja = localStorage.getItem("loja"); // Obter a loja do usuário logado
+
+    if (!loja) {
+      setError("Loja não encontrada. Faça login novamente.");
+      return;
+    }
+
     const clienteData = {
       nome,
       statusAssinatura,
       idade,
       comprasAnteriores,
       sexo,
+      loja, // Incluir a loja no corpo da requisição
     };
 
     try {
