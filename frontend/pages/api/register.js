@@ -17,7 +17,7 @@ export default async function handler(req, res) {
 
     try {
       // Verificar se o superior pertence à mesma loja (apenas se necessário)
-      if (superiorUsername && superiorPassword) {
+      if (acess !== "Primeiro Administrador" && (superiorUsername && superiorPassword)) {
         const responseSuperior = await fetch("https://parseapi.back4app.com/login", {
           method: "POST",
           headers: {
@@ -57,7 +57,7 @@ export default async function handler(req, res) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            nome: loja,
+            nome: loja, // Enviar o nome da loja como string
             tipo: "Loja Principal",
             administrador: username,
           }),
