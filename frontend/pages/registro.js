@@ -75,9 +75,13 @@ export default function Registro() {
       acess: nivel,
       idade: formData.idade,
       loja: criarLoja ? formData.nomeLoja : formData.lojaExistente,
-      superiorUsername: formData.superiorUsername,
-      superiorPassword: formData.superiorPassword,
     };
+
+    // Adicionar superiorUsername e superiorPassword apenas se necessário
+    if (requerAutenticacao) {
+      userData.superiorUsername = formData.superiorUsername;
+      userData.superiorPassword = formData.superiorPassword;
+    }
 
     try {
       const response = await fetch("/api/register", {
