@@ -17,14 +17,17 @@ export default function Client() {
   const [searchIdade, setSearchIdade] = useState("");
   const [searchSexo, setSearchSexo] = useState("");
   const [searchStatusAssinatura, setSearchStatusAssinatura] = useState("");
-  const [showResults, setShowResults] = useState(false); // Novo estado para controlar a exibição dos resultados
+  const [showResults, setShowResults] = useState(false);
   const router = useRouter();
+
+  // Obter a loja do usuário logado
+  const loja = localStorage.getItem("loja");
 
   // Carregar clientes da loja do usuário logado
   useEffect(() => {
     const fetchClientes = async () => {
       try {
-        const response = await fetch("/api/clientes");
+        const response = await fetch(`/api/clientes?loja=${loja}`);
         const data = await response.json();
         if (response.ok) {
           setClientes(data);
@@ -36,14 +39,16 @@ export default function Client() {
       }
     };
 
-    fetchClientes();
-  }, []);
+    if (loja) {
+      fetchClientes();
+    } else {
+      setError("Loja não encontrada. Faça login novamente.");
+    }
+  }, [loja]);
 
   // Adicionar ou editar cliente
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const loja = localStorage.getItem("loja"); // Obter a loja do usuário logado
 
     if (!loja) {
       setError("Loja não encontrada. Faça login novamente.");
