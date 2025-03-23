@@ -52,7 +52,7 @@ export default function Registro() {
     const selectedNivel = e.target.value;
     setNivel(selectedNivel);
     setRequerAutenticacao(selectedNivel !== "Primeiro Administrador");
-    setCriarLoja(selectedNivel === "Primeiro Administrador" || selectedNivel === "Vendedor Parceiro");
+    setCriarLoja(selectedNivel === "Vendedor parceiro");
   };
 
   const handleChange = (e) => {

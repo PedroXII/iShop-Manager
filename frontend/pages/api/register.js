@@ -43,12 +43,20 @@ export default async function handler(req, res) {
         if (dataSuperior.loja !== loja) {
           return res.status(403).json({ message: "O superior não pertence à mesma loja." });
         }
+
+        // Verificar se o superior tem permissão para criar o usuário
+        if (
+          (acess === "Administrador" && dataSuperior.acess !== "Primeiro Administrador") ||
+          (acess === "Funcionário" && dataSuperior.acess !== "Administrador" && dataSuperior.acess !== "Primeiro Administrador")
+        ) {
+          return res.status(403).json({ message: "O superior não tem permissão para criar este usuário." });
+        }
       }
 
-      // Criar a loja se o usuário for o Primeiro Administrador
+      // Criar a loja se o usuário for o Vendedor Parceiro
       let lojaId = loja; // Armazenará o ID da loja existente ou criada
 
-      if (acess === "Primeiro Administrador") {
+      if (acess === "Vendedor parceiro") {
         const responseLoja = await fetch("https://parseapi.back4app.com/classes/Loja", {
           method: "POST",
           headers: {
@@ -58,8 +66,9 @@ export default async function handler(req, res) {
           },
           body: JSON.stringify({
             nome: loja, // Enviar o nome da loja como string
-            tipo: "Loja Principal",
+            tipo: "Loja Parceira",
             administrador: username,
+            lojaSubordinada: dataSuperior.loja, // ID da loja a que está subordinada
           }),
         });
 
