@@ -160,28 +160,30 @@ export default function Registro() {
                       </div>
                     </div>
 
+                    {/* Campos básicos para todos os níveis de acesso */}
+                    <div className="mb-3">
+                      <label className="form-label">Nome de Usuário</label>
+                      <input type="text" className="form-control" name="username" value={formData.username} onChange={handleChange} required />
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">Senha</label>
+                      <input type="password" className="form-control" name="password" value={formData.password} onChange={handleChange} required />
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">Confirmar Senha</label>
+                      <input type="password" className="form-control" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required />
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label">Idade</label>
+                      <input type="number" className="form-control" name="idade" value={formData.idade} onChange={handleChange} required />
+                    </div>
+
+                    {/* Campos específicos para Usuário */}
                     {nivel === "Usuário" && (
                       <>
-                        <div className="mb-3">
-                          <label className="form-label">Nome de Usuário</label>
-                          <input type="text" className="form-control" name="username" value={formData.username} onChange={handleChange} required />
-                        </div>
-
-                        <div className="mb-3">
-                          <label className="form-label">Senha</label>
-                          <input type="password" className="form-control" name="password" value={formData.password} onChange={handleChange} required />
-                        </div>
-
-                        <div className="mb-3">
-                          <label className="form-label">Confirmar Senha</label>
-                          <input type="password" className="form-control" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required />
-                        </div>
-
-                        <div className="mb-3">
-                          <label className="form-label">Idade</label>
-                          <input type="number" className="form-control" name="idade" value={formData.idade} onChange={handleChange} required />
-                        </div>
-
                         <div className="mb-3">
                           <label className="form-label">Selecione a Loja</label>
                           <select className="form-control" name="lojaExistente" value={formData.lojaExistente} onChange={handleChange} required>
@@ -208,6 +210,7 @@ export default function Registro() {
                       </>
                     )}
 
+                    {/* Campos específicos para Administrador */}
                     {nivel === "Administrador" && (
                       <>
                         <div className="mb-3">
@@ -264,18 +267,6 @@ export default function Registro() {
                                   </option>
                                 ))}
                               </select>
-                            </div>
-
-                            <div className="bg-white border p-3 rounded mb-3">
-                              <h5>Autenticação do Administrador</h5>
-                              <div className="mb-2">
-                                <label className="form-label">Nome de Usuário</label>
-                                <input type="text" className="form-control" name="superiorUsername" value={formData.superiorUsername} onChange={handleChange} required />
-                              </div>
-                              <div className="mb-2">
-                                <label className="form-label">Senha</label>
-                                <input type="password" className="form-control" name="superiorPassword" value={formData.superiorPassword} onChange={handleChange} required />
-                              </div>
                             </div>
                           </>
                         )}
