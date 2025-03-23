@@ -1,12 +1,12 @@
 // pages/api/register.js
 export default async function handler(req, res) {
   if (req.method === "POST") {
-    const { username, password, acess, idade, loja, superiorUsername, superiorPassword } = req.body;
+    const { username, password, acess, idade, loja, superiorUsername, superiorPassword, acao, nomeLoja } = req.body;
 
-    console.log("Dados recebidos:", { username, password, acess, idade, loja, superiorUsername, superiorPassword });
+    console.log("Dados recebidos:", { username, password, acess, idade, loja, superiorUsername, superiorPassword, acao, nomeLoja });
 
     // Verificar se todos os campos obrigatórios estão presentes
-    if (!username || !password || !acess || !idade || !loja) {
+    if (!username || !password || !acess || !idade) {
       return res.status(400).json({ message: "Todos os campos são obrigatórios." });
     }
 
@@ -16,7 +16,9 @@ export default async function handler(req, res) {
     }
 
     try {
-      // Verificar se o superior pertence à mesma loja (apenas se necessário)
+      let lojaId = loja; // Armazenará o ID da loja existente ou criada
+
+      // Verificar se o superior pertence à mesma loja (apenas para usuários)
       if (acess === "Usuário" && (superiorUsername && superiorPassword)) {
         const responseSuperior = await fetch("https://parseapi.back4app.com/login", {
           method: "POST",
@@ -50,10 +52,8 @@ export default async function handler(req, res) {
         }
       }
 
-      // Criar a loja se necessário
-      let lojaId = loja; // Armazenará o ID da loja existente ou criada
-
-      if (acess === "Administrador" && (req.body.acao === "novaLoja" || req.body.acao === "lojaParceira")) {
+      // Criar a loja se necessário (apenas para administradores)
+      if (acess === "Administrador" && (acao === "novaLoja" || acao === "lojaParceira")) {
         const responseLoja = await fetch("https://parseapi.back4app.com/classes/Loja", {
           method: "POST",
           headers: {
@@ -62,10 +62,12 @@ export default async function handler(req, res) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            nome: loja,
-            tipo: req.body.acao === "lojaParceira" ? "Loja Parceira" : "Loja Principal",
-            primeiroAdministrador: username,
-            lojaSubordinada: req.body.acao === "lojaParceira" ? dataSuperior.loja : "Nenhuma",
+            nome: nomeLoja,
+            primeiroAdministrador: {
+              __type: "Pointer",
+              className: "_User",
+              objectId: username, // Aqui você deve usar o ID do administrador que está criando a loja
+            },
           }),
         });
 
@@ -77,6 +79,31 @@ export default async function handler(req, res) {
         }
 
         lojaId = dataLoja.objectId; // Usar o ID da loja criada
+
+        // Se for uma loja parceira, adicionar o ID da nova loja ao campo lojasParceiras da loja principal
+        if (acao === "lojaParceira" && loja) {
+          const responseAtualizarLojaPrincipal = await fetch(`https://parseapi.back4app.com/classes/Loja/${loja}`, {
+            method: "PUT",
+            headers: {
+              "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
+              "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              lojasParceiras: {
+                __op: "Add",
+                objects: [lojaId], // Adiciona o ID da nova loja ao array lojasParceiras
+              },
+            }),
+          });
+
+          const dataAtualizarLojaPrincipal = await responseAtualizarLojaPrincipal.json();
+
+          if (!responseAtualizarLojaPrincipal.ok) {
+            console.error("Erro ao atualizar loja principal:", dataAtualizarLojaPrincipal);
+            return res.status(400).json({ message: "Erro ao atualizar loja principal." });
+          }
+        }
       }
 
       // Criar o novo usuário no Back4App

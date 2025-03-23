@@ -1,3 +1,4 @@
+// pages/Registro.js
 import Link from "next/link";
 import Image from "next/image";
 import Head from "next/head";
@@ -20,7 +21,7 @@ export default function Registro() {
   });
   const [error, setError] = useState("");
 
-  // Carregar lojas ao abrir o formulário (executado apenas no cliente)
+  // Carregar lojas ao abrir o formulário
   useEffect(() => {
     const carregarLojas = async () => {
       try {
@@ -75,9 +76,11 @@ export default function Registro() {
       password: formData.password,
       acess: nivel,
       idade: Number(formData.idade),
-      loja: acao === "novaLoja" || acao === "lojaParceira" ? formData.nomeLoja : formData.lojaExistente,
       superiorUsername: nivel === "Usuário" ? formData.superiorUsername : null,
       superiorPassword: nivel === "Usuário" ? formData.superiorPassword : null,
+      nomeLoja: formData.nomeLoja,
+      loja: acao === "novaLoja" || acao === "lojaParceira" ? formData.nomeLoja : formData.lojaExistente,
+      acao: acao,
     };
 
     try {
