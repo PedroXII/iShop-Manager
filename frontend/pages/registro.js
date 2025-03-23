@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 
 export default function Registro() {
   const [nivel, setNivel] = useState("Usuário");
+  const [acao, setAcao] = useState(null);
   const [lojas, setLojas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
@@ -15,6 +16,7 @@ export default function Registro() {
     idade: "",
     superiorUsername: "",
     superiorPassword: "",
+    nomeLoja: "",
     lojaExistente: "",
   });
   const [error, setError] = useState("");
@@ -48,6 +50,11 @@ export default function Registro() {
 
   const handleNivelChange = (e) => {
     setNivel(e.target.value);
+    setAcao(null); // Resetar a ação ao mudar o nível de acesso
+  };
+
+  const handleAcaoChange = (acaoSelecionada) => {
+    setAcao(acaoSelecionada);
   };
 
   const handleChange = (e) => {
@@ -71,7 +78,9 @@ export default function Registro() {
       idade: Number(formData.idade),
       superiorUsername: nivel === "Usuário" ? formData.superiorUsername : null,
       superiorPassword: nivel === "Usuário" ? formData.superiorPassword : null,
-      loja: formData.lojaExistente,
+      nomeLoja: formData.nomeLoja,
+      loja: acao === "novaLoja" ? formData.nomeLoja : formData.lojaExistente,
+      acao: acao,
     };
 
     try {
@@ -201,6 +210,45 @@ export default function Registro() {
                             <input type="password" className="form-control" name="superiorPassword" value={formData.superiorPassword} onChange={handleChange} required />
                           </div>
                         </div>
+                      </>
+                    )}
+
+                    {/* Campos específicos para Administrador */}
+                    {nivel === "Administrador" && (
+                      <>
+                        <div className="mb-3">
+                          <button type="button" className="btn btn-secondary w-100 mb-2" onClick={() => handleAcaoChange("novaLoja")}>
+                            Cadastrar em uma Nova Loja
+                          </button>
+                          <button type="button" className="btn btn-secondary w-100 mb-2" onClick={() => handleAcaoChange("lojaExistente")}>
+                            Cadastrar em uma Loja Existente
+                          </button>
+                        </div>
+
+                        {acao === "novaLoja" && (
+                          <>
+                            <div className="mb-3">
+                              <label className="form-label">Nome da Loja</label>
+                              <input type="text" className="form-control" name="nomeLoja" value={formData.nomeLoja} onChange={handleChange} required />
+                            </div>
+                          </>
+                        )}
+
+                        {acao === "lojaExistente" && (
+                          <>
+                            <div className="mb-3">
+                              <label className="form-label">Selecione a Loja</label>
+                              <select className="form-control" name="lojaExistente" value={formData.lojaExistente} onChange={handleChange} required>
+                                <option value="">Selecione uma loja</option>
+                                {lojas.map((loja) => (
+                                  <option key={loja.objectId} value={loja.objectId}>
+                                    {loja.nome}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </>
+                        )}
                       </>
                     )}
 

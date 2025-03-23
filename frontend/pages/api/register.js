@@ -1,9 +1,9 @@
 // pages/api/register.js
 export default async function handler(req, res) {
   if (req.method === "POST") {
-    const { username, password, acess, idade, superiorUsername, superiorPassword, loja } = req.body;
+    const { username, password, acess, idade, superiorUsername, superiorPassword, nomeLoja, loja, acao } = req.body;
 
-    console.log("Dados recebidos:", { username, password, acess, idade, superiorUsername, superiorPassword, loja });
+    console.log("Dados recebidos:", { username, password, acess, idade, superiorUsername, superiorPassword, nomeLoja, loja, acao });
 
     // Verificar se todos os campos obrigatórios estão presentes
     if (!username || !password || !acess || !idade) {
@@ -50,6 +50,54 @@ export default async function handler(req, res) {
         if (dataSuperior.loja.objectId !== loja) {
           return res.status(403).json({ message: "O superior não pertence à mesma loja." });
         }
+      }
+
+      // Criar a nova loja se necessário (apenas para administradores)
+      if (acess === "Administrador" && acao === "novaLoja") {
+        // Verificar se a loja já existe para evitar duplicação
+        const responseVerificarLoja = await fetch(`https://parseapi.back4app.com/classes/Loja?where={"nome":"${nomeLoja}"}`, {
+          method: "GET",
+          headers: {
+            "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
+            "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
+            "Content-Type": "application/json",
+          },
+        });
+
+        const dataVerificarLoja = await responseVerificarLoja.json();
+        console.log("Resultado da verificação de loja:", dataVerificarLoja);
+
+        if (dataVerificarLoja.results.length > 0) {
+          return res.status(400).json({ message: "Uma loja com esse nome já existe." });
+        }
+
+        // Criar a nova loja
+        const responseLoja = await fetch("https://parseapi.back4app.com/classes/Loja", {
+          method: "POST",
+          headers: {
+            "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
+            "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            nome: nomeLoja, // Nome da nova loja
+            primeiroAdministrador: {
+              __type: "Pointer",
+              className: "_User",
+              objectId: username, // ID do administrador que está criando a loja
+            },
+          }),
+        });
+
+        const dataLoja = await responseLoja.json();
+        console.log("Resposta da criação da loja:", dataLoja);
+
+        if (!responseLoja.ok) {
+          console.error("Erro ao criar loja:", dataLoja);
+          return res.status(400).json({ message: "Erro ao criar loja." });
+        }
+
+        lojaId = dataLoja.objectId; // Define o ID da nova loja para o usuário
       }
 
       // Criar o novo usuário no Back4App
