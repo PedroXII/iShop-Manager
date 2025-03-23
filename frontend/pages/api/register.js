@@ -1,9 +1,9 @@
 // pages/api/register.js
 export default async function handler(req, res) {
   if (req.method === "POST") {
-    const { username, password, acess, idade, superiorUsername, superiorPassword, nomeLoja, acao } = req.body;
+    const { username, password, acess, idade, superiorUsername, superiorPassword, nomeLoja, acao, loja } = req.body;
 
-    console.log("Dados recebidos:", { username, password, acess, idade, superiorUsername, superiorPassword, nomeLoja, acao });
+    console.log("Dados recebidos:", { username, password, acess, idade, superiorUsername, superiorPassword, nomeLoja, acao, loja });
 
     // Verificar se todos os campos obrigatórios estão presentes
     if (!username || !password || !acess || !idade) {
@@ -76,6 +76,22 @@ export default async function handler(req, res) {
 
         // Obter o ID da loja principal do administrador
         lojaId = dataAdmin.loja.objectId;
+
+        // Verificar se a loja já existe para evitar duplicação
+        const responseVerificarLoja = await fetch(`https://parseapi.back4app.com/classes/Loja?where={"nome":"${nomeLoja}"}`, {
+          method: "GET",
+          headers: {
+            "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
+            "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
+            "Content-Type": "application/json",
+          },
+        });
+
+        const dataVerificarLoja = await responseVerificarLoja.json();
+
+        if (dataVerificarLoja.results.length > 0) {
+          return res.status(400).json({ message: "Uma loja com esse nome já existe." });
+        }
 
         // Criar a nova loja parceira
         const responseLoja = await fetch("https://parseapi.back4app.com/classes/Loja", {
