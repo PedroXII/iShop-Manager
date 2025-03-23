@@ -6,38 +6,164 @@ import { useRouter } from "next/router";
 
 export default function Funcionario() {
   const [funcionarios, setFuncionarios] = useState([]);
+  const [nome, setNome] = useState("");
+  const [cargo, setCargo] = useState("");
+  const [salario, setSalario] = useState(0);
+  const [idade, setIdade] = useState(18);
+  const [sexo, setSexo] = useState("");
+  const [deficiencia, setDeficiencia] = useState("");
   const [error, setError] = useState("");
+  const [editingFuncionario, setEditingFuncionario] = useState(null);
+  const [searchNome, setSearchNome] = useState("");
+  const [searchCargo, setSearchCargo] = useState("");
+  const [searchIdade, setSearchIdade] = useState("");
+  const [searchSexo, setSearchSexo] = useState("");
+  const [showResults, setShowResults] = useState(false);
+  const [loja, setLoja] = useState(null);
   const router = useRouter();
 
+  // Carregar a loja do usuário logado
   useEffect(() => {
-    const fetchFuncionarios = async () => {
+    if (typeof window !== "undefined") {
       const loja = localStorage.getItem("loja");
-      if (!loja) {
-        setError("Loja não encontrada.");
-        return;
-      }
+      setLoja(loja);
+    }
+  }, []);
 
-      try {
-        const response = await fetch(`/api/funcionario?loja=${loja}`);
-        const data = await response.json();
-
-        if (response.ok) {
-          setFuncionarios(data);
-        } else {
-          setError(data.message || "Erro ao buscar funcionários.");
+  // Carregar funcionários da loja do usuário logado
+  useEffect(() => {
+    if (loja) {
+      const fetchFuncionarios = async () => {
+        try {
+          const response = await fetch(`/api/funcionario?loja=${loja}`);
+          const data = await response.json();
+          if (response.ok) {
+            setFuncionarios(data);
+          } else {
+            setError(data.message || "Erro ao carregar funcionários.");
+          }
+        } catch (error) {
+          setError("Erro ao conectar com o servidor.");
         }
-      } catch (error) {
-        setError("Erro ao conectar com o servidor.");
-      }
+      };
+
+      fetchFuncionarios();
+    }
+  }, [loja]);
+
+  // Adicionar ou editar funcionário
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!loja) {
+      setError("Loja não encontrada. Faça login novamente.");
+      return;
+    }
+
+    const funcionarioData = {
+      nome,
+      cargo,
+      salario,
+      idade,
+      sexo,
+      deficiencia,
+      loja,
     };
 
-    fetchFuncionarios();
-  }, []);
+    try {
+      const url = editingFuncionario
+        ? `/api/funcionario?objectId=${editingFuncionario.objectId}`
+        : "/api/funcionario";
+      const method = editingFuncionario ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(funcionarioData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Atualizar a lista de funcionários
+        if (editingFuncionario) {
+          setFuncionarios(
+            funcionarios.map((f) =>
+              f.objectId === editingFuncionario.objectId ? data : f
+            )
+          );
+        } else {
+          setFuncionarios([...funcionarios, data]);
+        }
+        // Limpar o formulário
+        setNome("");
+        setCargo("");
+        setSalario(0);
+        setIdade(18);
+        setSexo("");
+        setDeficiencia("");
+        setEditingFuncionario(null);
+      } else {
+        setError(data.message || "Erro ao salvar funcionário.");
+      }
+    } catch (error) {
+      setError("Erro ao conectar com o servidor.");
+    }
+  };
+
+  // Excluir funcionário
+  const handleDelete = async (objectId) => {
+    try {
+      const response = await fetch(`/api/funcionario?objectId=${objectId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setFuncionarios(funcionarios.filter((f) => f.objectId !== objectId));
+      } else {
+        const data = await response.json();
+        setError(data.message || "Erro ao excluir funcionário.");
+      }
+    } catch (error) {
+      setError("Erro ao conectar com o servidor.");
+    }
+  };
+
+  // Preencher formulário para edição
+  const handleEdit = (funcionario) => {
+    setNome(funcionario.nome);
+    setCargo(funcionario.cargo);
+    setSalario(funcionario.salario);
+    setIdade(funcionario.idade);
+    setSexo(funcionario.sexo);
+    setDeficiencia(funcionario.deficiencia);
+    setEditingFuncionario(funcionario);
+  };
+
+  // Filtrar funcionários com base nos critérios de pesquisa
+  const filteredFuncionarios = funcionarios.filter((funcionario) => {
+    return (
+      (searchNome === "" ||
+        funcionario.nome.toLowerCase().includes(searchNome.toLowerCase())) &&
+      (searchCargo === "" ||
+        funcionario.cargo.toLowerCase().includes(searchCargo.toLowerCase())) &&
+      (searchIdade === "" || funcionario.idade === Number(searchIdade)) &&
+      (searchSexo === "" ||
+        funcionario.sexo.toLowerCase().includes(searchSexo.toLowerCase()))
+    );
+  });
+
+  // Função para lidar com a pesquisa
+  const handleSearch = () => {
+    setShowResults(true); // Mostrar resultados após a pesquisa
+  };
 
   return (
     <>
       <Head>
-        <title>iShop Manager: Funcionário</title>
+        <title>iShop Manager: Funcionários</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta charSet="UTF-8" />
         <link rel="icon" href="/favicon.ico" />
@@ -109,32 +235,189 @@ export default function Funcionario() {
 
           <section id="top" className="d-flex flex-column min-vh-100">
             <div className="container row m-auto">
-              <h2 className="text-center mb-4">Funcionários</h2>
-              {error && <div className="alert alert-danger">{error}</div>}
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Nome</th>
-                    <th>Cargo</th>
-                    <th>Salário</th>
-                    <th>Idade</th>
-                    <th>Sexo</th>
-                    <th>Deficiência</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {funcionarios.map((funcionario) => (
-                    <tr key={funcionario.objectId}>
-                      <td>{funcionario.nome}</td>
-                      <td>{funcionario.cargo}</td>
-                      <td>{funcionario.salario}</td>
-                      <td>{funcionario.idade}</td>
-                      <td>{funcionario.sexo}</td>
-                      <td>{funcionario.deficiencia}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="col-md-8 mx-auto mt-5">
+                <h2 className="text-center mb-4">Funcionários</h2>
+                {error && <div className="alert alert-danger">{error}</div>}
+
+                {/* Formulário para adicionar/editar funcionário */}
+                <form onSubmit={handleSubmit} className="mb-4">
+                  <div className="mb-3">
+                    <label htmlFor="nome" className="form-label">Nome</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="nome"
+                      placeholder="Digite o nome do funcionário"
+                      value={nome}
+                      onChange={(e) => setNome(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label htmlFor="cargo" className="form-label">Cargo</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="cargo"
+                      placeholder="Digite o cargo do funcionário"
+                      value={cargo}
+                      onChange={(e) => setCargo(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label htmlFor="salario" className="form-label">Salário</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      id="salario"
+                      placeholder="Digite o salário do funcionário"
+                      value={salario}
+                      onChange={(e) => setSalario(Number(e.target.value))}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label htmlFor="idade" className="form-label">Idade</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      id="idade"
+                      placeholder="Digite a idade do funcionário"
+                      value={idade}
+                      onChange={(e) => setIdade(Number(e.target.value))}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label htmlFor="sexo" className="form-label">Sexo</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="sexo"
+                      placeholder="Digite o sexo do funcionário"
+                      value={sexo}
+                      onChange={(e) => setSexo(e.target.value)}
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label htmlFor="deficiencia" className="form-label">Deficiência</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="deficiencia"
+                      placeholder="Digite a deficiência do funcionário"
+                      value={deficiencia}
+                      onChange={(e) => setDeficiencia(e.target.value)}
+                    />
+                  </div>
+                  <button type="submit" className="btn btn-primary w-100">
+                    {editingFuncionario ? "Atualizar Funcionário" : "Adicionar Funcionário"}
+                  </button>
+                </form>
+
+                {/* Área de pesquisa e filtros */}
+                <div className="mb-4">
+                  <h3>Pesquisar Funcionários</h3>
+                  <div className="row">
+                    <div className="col-md-3">
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Nome"
+                        value={searchNome}
+                        onChange={(e) => setSearchNome(e.target.value)}
+                      />
+                    </div>
+                    <div className="col-md-3">
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Cargo"
+                        value={searchCargo}
+                        onChange={(e) => setSearchCargo(e.target.value)}
+                      />
+                    </div>
+                    <div className="col-md-3">
+                      <input
+                        type="number"
+                        className="form-control"
+                        placeholder="Idade"
+                        value={searchIdade}
+                        onChange={(e) => setSearchIdade(e.target.value)}
+                      />
+                    </div>
+                    <div className="col-md-3">
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Sexo"
+                        value={searchSexo}
+                        onChange={(e) => setSearchSexo(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <button
+                    className="btn btn-secondary mt-2"
+                    onClick={() => {
+                      setSearchNome("");
+                      setSearchCargo("");
+                      setSearchIdade("");
+                      setSearchSexo("");
+                      setShowResults(false); // Limpar resultados ao limpar filtros
+                    }}
+                  >
+                    Limpar Filtros
+                  </button>
+                  <button
+                    className="btn btn-primary mt-2 ms-2"
+                    onClick={handleSearch} // Executar a pesquisa
+                  >
+                    Pesquisar
+                  </button>
+                </div>
+
+                {/* Lista de funcionários (só aparece após a pesquisa) */}
+                {showResults && (
+                  <div className="list-group">
+                    {filteredFuncionarios.length > 0 ? (
+                      filteredFuncionarios.map((funcionario) => (
+                        <div
+                          key={funcionario.objectId}
+                          className="list-group-item d-flex justify-content-between align-items-center"
+                        >
+                          <div>
+                            <h5>{funcionario.nome}</h5>
+                            <p>Cargo: {funcionario.cargo}</p>
+                            <p>Salário: {funcionario.salario}</p>
+                            <p>Idade: {funcionario.idade}</p>
+                            <p>Sexo: {funcionario.sexo}</p>
+                            <p>Deficiência: {funcionario.deficiencia}</p>
+                          </div>
+                          <div>
+                            <button
+                              className="btn btn-warning btn-sm me-2"
+                              onClick={() => handleEdit(funcionario)}
+                            >
+                              Editar
+                            </button>
+                            <button
+                              className="btn btn-danger btn-sm"
+                              onClick={() => handleDelete(funcionario.objectId)}
+                            >
+                              Excluir
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="alert alert-info">
+                        Nenhum funcionário encontrado com os filtros aplicados.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </section>
 
