@@ -1,9 +1,9 @@
 // pages/api/register.js
 export default async function handler(req, res) {
   if (req.method === "POST") {
-    const { username, password, acess, idade, loja, superiorUsername, superiorPassword, acao, nomeLoja } = req.body;
+    const { username, password, acess, idade, superiorUsername, superiorPassword, nomeLoja, acao } = req.body;
 
-    console.log("Dados recebidos:", { username, password, acess, idade, loja, superiorUsername, superiorPassword, acao, nomeLoja });
+    console.log("Dados recebidos:", { username, password, acess, idade, superiorUsername, superiorPassword, nomeLoja, acao });
 
     // Verificar se todos os campos obrigatórios estão presentes
     if (!username || !password || !acess || !idade) {
@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     }
 
     try {
-      let lojaId = loja; // Armazenará o ID da loja existente ou criada
+      let lojaId = null; // Armazenará o ID da loja principal (se houver)
 
       // Verificar se o superior pertence à mesma loja (apenas para usuários)
       if (acess === "Usuário" && (superiorUsername && superiorPassword)) {
@@ -41,19 +41,43 @@ export default async function handler(req, res) {
           return res.status(400).json({ message: "Superior não encontrado ou senha incorreta." });
         }
 
-        // Verificar se o superior pertence à mesma loja
-        if (dataSuperior.loja !== loja) {
-          return res.status(403).json({ message: "O superior não pertence à mesma loja." });
-        }
-
         // Verificar se o superior é um administrador
         if (dataSuperior.acess !== "Administrador") {
           return res.status(403).json({ message: "O superior não tem permissão para criar este usuário." });
         }
+
+        // Obter o ID da loja do superior (loja principal)
+        lojaId = dataSuperior.loja.objectId;
       }
 
-      // Criar a loja se necessário (apenas para administradores)
-      if (acess === "Administrador" && (acao === "novaLoja" || acao === "lojaParceira")) {
+      // Criar a loja parceira se necessário (apenas para administradores)
+      if (acess === "Administrador" && acao === "lojaParceira") {
+        // Autenticar o administrador da loja principal
+        const responseAdmin = await fetch("https://parseapi.back4app.com/login", {
+          method: "POST",
+          headers: {
+            "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
+            "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: superiorUsername,
+            password: superiorPassword,
+          }),
+        });
+
+        const dataAdmin = await responseAdmin.json();
+
+        // Se o administrador não for encontrado ou a senha estiver incorreta
+        if (!responseAdmin.ok) {
+          console.error("Erro ao autenticar administrador:", dataAdmin);
+          return res.status(400).json({ message: "Administrador não encontrado ou senha incorreta." });
+        }
+
+        // Obter o ID da loja principal do administrador
+        lojaId = dataAdmin.loja.objectId;
+
+        // Criar a nova loja parceira
         const responseLoja = await fetch("https://parseapi.back4app.com/classes/Loja", {
           method: "POST",
           headers: {
@@ -62,11 +86,11 @@ export default async function handler(req, res) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            nome: nomeLoja,
+            nome: nomeLoja, // Nome da loja parceira
             primeiroAdministrador: {
               __type: "Pointer",
               className: "_User",
-              objectId: username, // Aqui você deve usar o ID do administrador que está criando a loja
+              objectId: username, // ID do administrador que está criando a loja
             },
           }),
         });
@@ -78,31 +102,29 @@ export default async function handler(req, res) {
           return res.status(400).json({ message: "Erro ao criar loja." });
         }
 
-        lojaId = dataLoja.objectId; // Usar o ID da loja criada
+        const lojaParceiraId = dataLoja.objectId; // ID da nova loja parceira
 
-        // Se for uma loja parceira, adicionar o ID da nova loja ao campo lojasParceiras da loja principal
-        if (acao === "lojaParceira" && loja) {
-          const responseAtualizarLojaPrincipal = await fetch(`https://parseapi.back4app.com/classes/Loja/${loja}`, {
-            method: "PUT",
-            headers: {
-              "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
-              "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
-              "Content-Type": "application/json",
+        // Adicionar o ID da loja parceira ao array lojasParceiras da loja principal
+        const responseAtualizarLojaPrincipal = await fetch(`https://parseapi.back4app.com/classes/Loja/${lojaId}`, {
+          method: "PUT",
+          headers: {
+            "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
+            "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            lojasParceiras: {
+              __op: "Add",
+              objects: [lojaParceiraId], // Adiciona o ID da loja parceira ao array
             },
-            body: JSON.stringify({
-              lojasParceiras: {
-                __op: "Add",
-                objects: [lojaId], // Adiciona o ID da nova loja ao array lojasParceiras
-              },
-            }),
-          });
+          }),
+        });
 
-          const dataAtualizarLojaPrincipal = await responseAtualizarLojaPrincipal.json();
+        const dataAtualizarLojaPrincipal = await responseAtualizarLojaPrincipal.json();
 
-          if (!responseAtualizarLojaPrincipal.ok) {
-            console.error("Erro ao atualizar loja principal:", dataAtualizarLojaPrincipal);
-            return res.status(400).json({ message: "Erro ao atualizar loja principal." });
-          }
+        if (!responseAtualizarLojaPrincipal.ok) {
+          console.error("Erro ao atualizar loja principal:", dataAtualizarLojaPrincipal);
+          return res.status(400).json({ message: "Erro ao atualizar loja principal." });
         }
       }
 
@@ -119,7 +141,7 @@ export default async function handler(req, res) {
           password,
           acess,
           idade: Number(idade),
-          loja: lojaId,
+          loja: lojaId, // ID da loja principal (se houver)
         }),
       });
 

@@ -76,10 +76,10 @@ export default function Registro() {
       password: formData.password,
       acess: nivel,
       idade: Number(formData.idade),
-      superiorUsername: nivel === "Usuário" ? formData.superiorUsername : null,
-      superiorPassword: nivel === "Usuário" ? formData.superiorPassword : null,
+      superiorUsername: nivel === "Usuário" || acao === "lojaParceira" ? formData.superiorUsername : null,
+      superiorPassword: nivel === "Usuário" || acao === "lojaParceira" ? formData.superiorPassword : null,
       nomeLoja: formData.nomeLoja,
-      loja: acao === "novaLoja" || acao === "lojaParceira" ? formData.nomeLoja : formData.lojaExistente,
+      loja: acao === "lojaParceira" ? formData.lojaExistente : null, // Envia o ID da loja principal apenas para lojas parceiras
       acao: acao,
     };
 
