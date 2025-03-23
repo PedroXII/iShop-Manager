@@ -128,10 +128,10 @@ export default function Registro() {
                       <Link href="/index" className="nav-link text-light">Home</Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="#top" className="nav-link text-light">Login</Link>
+                      <Link href="/login" className="nav-link text-light">Login</Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/registro" className="nav-link text-light">Registre-se</Link>
+                      <Link href="#top" className="nav-link text-light">Registre-se</Link>
                     </li>
                     <li className="nav-item">
                       <Link href="#bottom" className="nav-link text-light">Sobre</Link>

@@ -42,8 +42,8 @@ export default function Promocao() {
                 <div className="collapse navbar-collapse" id="navbarNav">
                   <ul className="navbar-nav ms-auto">
                     <li className="nav-item">
-                      <Link href="/usuario">
-                        <a className="nav-link text-light">Usuário</a>
+                      <Link href="/funcionario">
+                        <a className="nav-link text-light">Funcionário</a>
                       </Link>
                     </li>
                     <li className="nav-item">
