@@ -4,9 +4,8 @@ import Head from "next/head";
 import { useState, useEffect } from "react";
 
 export default function Registro() {
-  const [nivel, setNivel] = useState("Vendedor parceiro");
-  const [requerAutenticacao, setRequerAutenticacao] = useState(true);
-  const [criarLoja, setCriarLoja] = useState(false);
+  const [nivel, setNivel] = useState("Usuário");
+  const [acao, setAcao] = useState(null);
   const [lojas, setLojas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
@@ -49,10 +48,12 @@ export default function Registro() {
   }, []);
 
   const handleNivelChange = (e) => {
-    const selectedNivel = e.target.value;
-    setNivel(selectedNivel);
-    setRequerAutenticacao(selectedNivel !== "Primeiro Administrador");
-    setCriarLoja(selectedNivel === "Vendedor parceiro");
+    setNivel(e.target.value);
+    setAcao(null); // Resetar a ação ao mudar o nível de acesso
+  };
+
+  const handleAcaoChange = (acaoSelecionada) => {
+    setAcao(acaoSelecionada);
   };
 
   const handleChange = (e) => {
@@ -73,15 +74,11 @@ export default function Registro() {
       username: formData.username,
       password: formData.password,
       acess: nivel,
-      idade: Number(formData.idade), // Garantir que a idade seja um número
-      loja: criarLoja ? formData.nomeLoja : formData.lojaExistente,
+      idade: Number(formData.idade),
+      loja: acao === "novaLoja" || acao === "lojaParceira" ? formData.nomeLoja : formData.lojaExistente,
+      superiorUsername: nivel === "Usuário" ? formData.superiorUsername : null,
+      superiorPassword: nivel === "Usuário" ? formData.superiorPassword : null,
     };
-
-    // Adicionar superiorUsername e superiorPassword apenas se necessário
-    if (requerAutenticacao) {
-      userData.superiorUsername = formData.superiorUsername;
-      userData.superiorPassword = formData.superiorPassword;
-    }
 
     try {
       const response = await fetch("/api/register", {
@@ -152,29 +149,9 @@ export default function Registro() {
                 ) : (
                   <form onSubmit={handleSubmit}>
                     <div className="mb-3">
-                      <label className="form-label">Nome de Usuário</label>
-                      <input type="text" className="form-control" name="username" value={formData.username} onChange={handleChange} required />
-                    </div>
-
-                    <div className="mb-3">
-                      <label className="form-label">Senha</label>
-                      <input type="password" className="form-control" name="password" value={formData.password} onChange={handleChange} required />
-                    </div>
-
-                    <div className="mb-3">
-                      <label className="form-label">Confirmar Senha</label>
-                      <input type="password" className="form-control" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required />
-                    </div>
-
-                    <div className="mb-3">
-                      <label className="form-label">Idade</label>
-                      <input type="number" className="form-control" name="idade" value={formData.idade} onChange={handleChange} required />
-                    </div>
-
-                    <div className="mb-3">
                       <label className="form-label">Nível de Acesso</label>
                       <div>
-                        {["Vendedor parceiro", "Funcionário", "Administrador", "Primeiro Administrador"].map((opcao) => (
+                        {["Usuário", "Administrador"].map((opcao) => (
                           <div className="form-check" key={opcao}>
                             <input className="form-check-input" type="radio" name="nivel" value={opcao} checked={nivel === opcao} onChange={handleNivelChange} />
                             <label className="form-check-label">{opcao}</label>
@@ -183,39 +160,126 @@ export default function Registro() {
                       </div>
                     </div>
 
-                    {criarLoja && (
-                      <div className="mb-3">
-                        <label className="form-label">Nome da Loja</label>
-                        <input type="text" className="form-control" name="nomeLoja" value={formData.nomeLoja} onChange={handleChange} required />
-                      </div>
-                    )}
-
-                    {!criarLoja && (
-                      <div className="mb-3">
-                        <label className="form-label">Selecione a Loja</label>
-                        <select className="form-control" name="lojaExistente" value={formData.lojaExistente} onChange={handleChange} required>
-                          <option value="">Selecione uma loja</option>
-                          {lojas.map((loja) => (
-                            <option key={loja.objectId} value={loja.objectId}>
-                              {loja.nome}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-
-                    {requerAutenticacao && (
-                      <div className="bg-white border p-3 rounded mb-3">
-                        <h5>Autenticação do Superior</h5>
-                        <div className="mb-2">
+                    {nivel === "Usuário" && (
+                      <>
+                        <div className="mb-3">
                           <label className="form-label">Nome de Usuário</label>
-                          <input type="text" className="form-control" name="superiorUsername" value={formData.superiorUsername} onChange={handleChange} required />
+                          <input type="text" className="form-control" name="username" value={formData.username} onChange={handleChange} required />
                         </div>
-                        <div className="mb-2">
+
+                        <div className="mb-3">
                           <label className="form-label">Senha</label>
-                          <input type="password" className="form-control" name="superiorPassword" value={formData.superiorPassword} onChange={handleChange} required />
+                          <input type="password" className="form-control" name="password" value={formData.password} onChange={handleChange} required />
                         </div>
-                      </div>
+
+                        <div className="mb-3">
+                          <label className="form-label">Confirmar Senha</label>
+                          <input type="password" className="form-control" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required />
+                        </div>
+
+                        <div className="mb-3">
+                          <label className="form-label">Idade</label>
+                          <input type="number" className="form-control" name="idade" value={formData.idade} onChange={handleChange} required />
+                        </div>
+
+                        <div className="mb-3">
+                          <label className="form-label">Selecione a Loja</label>
+                          <select className="form-control" name="lojaExistente" value={formData.lojaExistente} onChange={handleChange} required>
+                            <option value="">Selecione uma loja</option>
+                            {lojas.map((loja) => (
+                              <option key={loja.objectId} value={loja.objectId}>
+                                {loja.nome}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="bg-white border p-3 rounded mb-3">
+                          <h5>Autenticação do Administrador</h5>
+                          <div className="mb-2">
+                            <label className="form-label">Nome de Usuário</label>
+                            <input type="text" className="form-control" name="superiorUsername" value={formData.superiorUsername} onChange={handleChange} required />
+                          </div>
+                          <div className="mb-2">
+                            <label className="form-label">Senha</label>
+                            <input type="password" className="form-control" name="superiorPassword" value={formData.superiorPassword} onChange={handleChange} required />
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {nivel === "Administrador" && (
+                      <>
+                        <div className="mb-3">
+                          <button type="button" className="btn btn-secondary w-100 mb-2" onClick={() => handleAcaoChange("novaLoja")}>
+                            Cadastrar em uma Nova Loja
+                          </button>
+                          <button type="button" className="btn btn-secondary w-100 mb-2" onClick={() => handleAcaoChange("lojaParceira")}>
+                            Cadastrar em uma Nova Loja Parceira
+                          </button>
+                          <button type="button" className="btn btn-secondary w-100 mb-2" onClick={() => handleAcaoChange("lojaExistente")}>
+                            Cadastrar em uma Loja Existente
+                          </button>
+                        </div>
+
+                        {acao === "novaLoja" && (
+                          <>
+                            <div className="mb-3">
+                              <label className="form-label">Nome da Loja</label>
+                              <input type="text" className="form-control" name="nomeLoja" value={formData.nomeLoja} onChange={handleChange} required />
+                            </div>
+                          </>
+                        )}
+
+                        {acao === "lojaParceira" && (
+                          <>
+                            <div className="mb-3">
+                              <label className="form-label">Nome da Loja Parceira</label>
+                              <input type="text" className="form-control" name="nomeLoja" value={formData.nomeLoja} onChange={handleChange} required />
+                            </div>
+
+                            <div className="bg-white border p-3 rounded mb-3">
+                              <h5>Autenticação do Administrador</h5>
+                              <div className="mb-2">
+                                <label className="form-label">Nome de Usuário</label>
+                                <input type="text" className="form-control" name="superiorUsername" value={formData.superiorUsername} onChange={handleChange} required />
+                              </div>
+                              <div className="mb-2">
+                                <label className="form-label">Senha</label>
+                                <input type="password" className="form-control" name="superiorPassword" value={formData.superiorPassword} onChange={handleChange} required />
+                              </div>
+                            </div>
+                          </>
+                        )}
+
+                        {acao === "lojaExistente" && (
+                          <>
+                            <div className="mb-3">
+                              <label className="form-label">Selecione a Loja</label>
+                              <select className="form-control" name="lojaExistente" value={formData.lojaExistente} onChange={handleChange} required>
+                                <option value="">Selecione uma loja</option>
+                                {lojas.map((loja) => (
+                                  <option key={loja.objectId} value={loja.objectId}>
+                                    {loja.nome}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div className="bg-white border p-3 rounded mb-3">
+                              <h5>Autenticação do Administrador</h5>
+                              <div className="mb-2">
+                                <label className="form-label">Nome de Usuário</label>
+                                <input type="text" className="form-control" name="superiorUsername" value={formData.superiorUsername} onChange={handleChange} required />
+                              </div>
+                              <div className="mb-2">
+                                <label className="form-label">Senha</label>
+                                <input type="password" className="form-control" name="superiorPassword" value={formData.superiorPassword} onChange={handleChange} required />
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </>
                     )}
 
                     <button type="submit" className="btn btn-primary w-100">Registrar</button>

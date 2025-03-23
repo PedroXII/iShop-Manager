@@ -17,7 +17,7 @@ export default async function handler(req, res) {
 
     try {
       // Verificar se o superior pertence à mesma loja (apenas se necessário)
-      if (acess !== "Primeiro Administrador" && (superiorUsername && superiorPassword)) {
+      if (acess === "Usuário" && (superiorUsername && superiorPassword)) {
         const responseSuperior = await fetch("https://parseapi.back4app.com/login", {
           method: "POST",
           headers: {
@@ -44,19 +44,16 @@ export default async function handler(req, res) {
           return res.status(403).json({ message: "O superior não pertence à mesma loja." });
         }
 
-        // Verificar se o superior tem permissão para criar o usuário
-        if (
-          (acess === "Administrador" && dataSuperior.acess !== "Primeiro Administrador") ||
-          (acess === "Funcionário" && dataSuperior.acess !== "Administrador" && dataSuperior.acess !== "Primeiro Administrador")
-        ) {
+        // Verificar se o superior é um administrador
+        if (dataSuperior.acess !== "Administrador") {
           return res.status(403).json({ message: "O superior não tem permissão para criar este usuário." });
         }
       }
 
-      // Criar a loja se o usuário for o Vendedor Parceiro
+      // Criar a loja se necessário
       let lojaId = loja; // Armazenará o ID da loja existente ou criada
 
-      if (acess === "Vendedor parceiro") {
+      if (acess === "Administrador" && (req.body.acao === "novaLoja" || req.body.acao === "lojaParceira")) {
         const responseLoja = await fetch("https://parseapi.back4app.com/classes/Loja", {
           method: "POST",
           headers: {
@@ -65,10 +62,10 @@ export default async function handler(req, res) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            nome: loja, // Enviar o nome da loja como string
-            tipo: "Loja Parceira",
-            administrador: username,
-            lojaSubordinada: dataSuperior.loja, // ID da loja a que está subordinada
+            nome: loja,
+            tipo: req.body.acao === "lojaParceira" ? "Loja Parceira" : "Loja Principal",
+            primeiroAdministrador: username,
+            lojaSubordinada: req.body.acao === "lojaParceira" ? dataSuperior.loja : "Nenhuma",
           }),
         });
 
@@ -94,8 +91,8 @@ export default async function handler(req, res) {
           username,
           password,
           acess,
-          idade: Number(idade), // Garantir que a idade seja um número
-          loja: lojaId, // Usar o ID da loja criada ou existente
+          idade: Number(idade),
+          loja: lojaId,
         }),
       });
 
