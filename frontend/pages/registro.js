@@ -247,6 +247,18 @@ export default function Registro() {
                                 ))}
                               </select>
                             </div>
+
+                            <div className="bg-white border p-3 rounded mb-3">
+                              <h5>Autenticação do Administrador</h5>
+                              <div className="mb-2">
+                                <label className="form-label">Nome de Usuário</label>
+                                <input type="text" className="form-control" name="superiorUsername" value={formData.superiorUsername} onChange={handleChange} required />
+                              </div>
+                              <div className="mb-2">
+                                <label className="form-label">Senha</label>
+                                <input type="password" className="form-control" name="superiorPassword" value={formData.superiorPassword} onChange={handleChange} required />
+                              </div>
+                            </div>
                           </>
                         )}
                       </>

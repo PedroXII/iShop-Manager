@@ -18,8 +18,8 @@ export default async function handler(req, res) {
     try {
       let lojaId = loja; // Armazenará o ID da loja
 
-      // Verificar se o superior pertence à mesma loja (apenas para usuários)
-      if (acess === "Usuário" && (superiorUsername && superiorPassword)) {
+      // Verificar se o superior pertence à mesma loja (apenas para usuários e administradores cadastrando em loja existente)
+      if ((acess === "Usuário" || (acess === "Administrador" && acao === "lojaExistente")) && (superiorUsername && superiorPassword)) {
         const responseSuperior = await fetch("https://parseapi.back4app.com/login", {
           method: "POST",
           headers: {
