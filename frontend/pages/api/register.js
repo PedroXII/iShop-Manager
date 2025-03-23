@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     }
 
     try {
-      let lojaId = null; // Armazenará o ID da nova loja parceira
+      let lojaId = null; // Armazenará o ID da nova loja
 
       // Verificar se o superior pertence à mesma loja (apenas para usuários)
       if (acess === "Usuário" && (superiorUsername && superiorPassword)) {
@@ -50,33 +50,8 @@ export default async function handler(req, res) {
         lojaId = dataSuperior.loja.objectId;
       }
 
-      // Criar a loja parceira se necessário (apenas para administradores)
-      if (acess === "Administrador" && acao === "lojaParceira") {
-        // Autenticar o administrador da loja parceira
-        const responseAdmin = await fetch("https://parseapi.back4app.com/login", {
-          method: "POST",
-          headers: {
-            "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
-            "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            username: superiorUsername,
-            password: superiorPassword,
-          }),
-        });
-
-        const dataAdmin = await responseAdmin.json();
-
-        // Se o administrador não for encontrado ou a senha estiver incorreta
-        if (!responseAdmin.ok) {
-          console.error("Erro ao autenticar administrador:", dataAdmin);
-          return res.status(400).json({ message: "Administrador não encontrado ou senha incorreta." });
-        }
-
-        // Obter o ID da loja parceira do administrador
-        const lojaParceiraId = dataAdmin.loja.objectId;
-
+      // Criar a loja se necessário (apenas para administradores)
+      if (acess === "Administrador" && (acao === "novaLoja" || acao === "lojaParceira")) {
         // Verificar se a loja já existe para evitar duplicação
         const responseVerificarLoja = await fetch(`https://parseapi.back4app.com/classes/Loja?where={"nome":"${nomeLoja}"}`, {
           method: "GET",
@@ -88,12 +63,13 @@ export default async function handler(req, res) {
         });
 
         const dataVerificarLoja = await responseVerificarLoja.json();
+        console.log("Resultado da verificação de loja:", dataVerificarLoja);
 
         if (dataVerificarLoja.results.length > 0) {
           return res.status(400).json({ message: "Uma loja com esse nome já existe." });
         }
 
-        // Criar a nova loja parceira
+        // Criar a nova loja
         const responseLoja = await fetch("https://parseapi.back4app.com/classes/Loja", {
           method: "POST",
           headers: {
@@ -102,46 +78,102 @@ export default async function handler(req, res) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            nome: nomeLoja, // Nome da nova loja parceira
+            nome: nomeLoja, // Nome da nova loja
             primeiroAdministrador: {
               __type: "Pointer",
               className: "_User",
               objectId: username, // ID do administrador que está criando a loja
             },
-            lojasParceiras: [lojaParceiraId], // Adiciona o ID da loja parceira ao array
+            lojasParceiras: acao === "lojaParceira" ? [] : undefined, // Inicializa o array apenas para lojas parceiras
           }),
         });
 
         const dataLoja = await responseLoja.json();
+        console.log("Resposta da criação da loja:", dataLoja);
 
         if (!responseLoja.ok) {
           console.error("Erro ao criar loja:", dataLoja);
           return res.status(400).json({ message: "Erro ao criar loja." });
         }
 
-        const novaIdLoja = dataLoja.objectId; // ID da nova loja parceira
+        const novaIdLoja = dataLoja.objectId; // ID da nova loja
+        console.log("ID da nova loja criada:", novaIdLoja);
 
-        // Adicionar o ID da nova loja ao array lojasParceiras da loja parceira
-        const responseAtualizarLojaParceira = await fetch(`https://parseapi.back4app.com/classes/Loja/${lojaParceiraId}`, {
-          method: "PUT",
-          headers: {
-            "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
-            "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            lojasParceiras: {
-              __op: "Add",
-              objects: [novaIdLoja], // Adiciona o ID da nova loja ao array
+        // Se for uma loja parceira, vincular à loja parceira
+        if (acao === "lojaParceira") {
+          // Autenticar o administrador da loja parceira
+          const responseAdmin = await fetch("https://parseapi.back4app.com/login", {
+            method: "POST",
+            headers: {
+              "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
+              "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
+              "Content-Type": "application/json",
             },
-          }),
-        });
+            body: JSON.stringify({
+              username: superiorUsername,
+              password: superiorPassword,
+            }),
+          });
 
-        const dataAtualizarLojaParceira = await responseAtualizarLojaParceira.json();
+          const dataAdmin = await responseAdmin.json();
 
-        if (!responseAtualizarLojaParceira.ok) {
-          console.error("Erro ao atualizar loja parceira:", dataAtualizarLojaParceira);
-          return res.status(400).json({ message: "Erro ao atualizar loja parceira." });
+          // Se o administrador não for encontrado ou a senha estiver incorreta
+          if (!responseAdmin.ok) {
+            console.error("Erro ao autenticar administrador:", dataAdmin);
+            return res.status(400).json({ message: "Administrador não encontrado ou senha incorreta." });
+          }
+
+          // Obter o ID da loja parceira do administrador
+          const lojaParceiraId = dataAdmin.loja.objectId;
+          console.log("ID da loja parceira obtido:", lojaParceiraId);
+
+          // Adicionar o ID da nova loja ao array lojasParceiras da loja parceira
+          const responseAtualizarLojaParceira = await fetch(`https://parseapi.back4app.com/classes/Loja/${lojaParceiraId}`, {
+            method: "PUT",
+            headers: {
+              "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
+              "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              lojasParceiras: {
+                __op: "Add",
+                objects: [novaIdLoja], // Adiciona o ID da nova loja ao array
+              },
+            }),
+          });
+
+          const dataAtualizarLojaParceira = await responseAtualizarLojaParceira.json();
+          console.log("Resposta da atualização da loja parceira:", dataAtualizarLojaParceira);
+
+          if (!responseAtualizarLojaParceira.ok) {
+            console.error("Erro ao atualizar loja parceira:", dataAtualizarLojaParceira);
+            return res.status(400).json({ message: "Erro ao atualizar loja parceira." });
+          }
+
+          // Adicionar o ID da loja parceira ao array lojasParceiras da nova loja
+          const responseAtualizarNovaLoja = await fetch(`https://parseapi.back4app.com/classes/Loja/${novaIdLoja}`, {
+            method: "PUT",
+            headers: {
+              "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
+              "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              lojasParceiras: {
+                __op: "Add",
+                objects: [lojaParceiraId], // Adiciona o ID da loja parceira ao array
+              },
+            }),
+          });
+
+          const dataAtualizarNovaLoja = await responseAtualizarNovaLoja.json();
+          console.log("Resposta da atualização da nova loja:", dataAtualizarNovaLoja);
+
+          if (!responseAtualizarNovaLoja.ok) {
+            console.error("Erro ao atualizar nova loja:", dataAtualizarNovaLoja);
+            return res.status(400).json({ message: "Erro ao atualizar nova loja." });
+          }
         }
 
         lojaId = novaIdLoja; // Define o ID da nova loja para o usuário
@@ -165,7 +197,7 @@ export default async function handler(req, res) {
       });
 
       const data = await response.json();
-      console.log("Resposta do Back4App:", data);
+      console.log("Resposta do Back4App ao criar usuário:", data);
 
       if (response.ok) {
         res.status(200).json({ message: "Usuário registrado com sucesso!" });
