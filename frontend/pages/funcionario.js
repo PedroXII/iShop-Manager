@@ -37,8 +37,10 @@ export default function Funcionario() {
         try {
           const response = await fetch(`/api/funcionario?loja=${loja}`);
           const data = await response.json();
+
           if (response.ok) {
-            setFuncionarios(data);
+            // Garantir que os dados sejam um array
+            setFuncionarios(Array.isArray(data) ? data : []);
           } else {
             setError(data.message || "Erro ao carregar funcionários.");
           }
@@ -69,7 +71,7 @@ export default function Funcionario() {
       salario,
       idade,
       sexo,
-      deficiencia: deficienciaValue, // Usar o valor padrão se estiver vazio
+      deficiencia: deficienciaValue,
       loja,
     };
 
@@ -136,12 +138,12 @@ export default function Funcionario() {
 
   // Preencher formulário para edição
   const handleEdit = (funcionario) => {
-    setNome(funcionario.nome);
-    setCargo(funcionario.cargo);
-    setSalario(funcionario.salario);
-    setIdade(funcionario.idade);
-    setSexo(funcionario.sexo);
-    setDeficiencia(funcionario.deficiencia);
+    setNome(funcionario.nome || "");
+    setCargo(funcionario.cargo || "");
+    setSalario(funcionario.salario || 0);
+    setIdade(funcionario.idade || 18);
+    setSexo(funcionario.sexo || "");
+    setDeficiencia(funcionario.deficiencia || "");
     setEditingFuncionario(funcionario);
   };
 
@@ -149,12 +151,12 @@ export default function Funcionario() {
   const filteredFuncionarios = funcionarios.filter((funcionario) => {
     return (
       (searchNome === "" ||
-        funcionario.nome.toLowerCase().includes(searchNome.toLowerCase())) &&
+        (funcionario.nome && funcionario.nome.toLowerCase().includes(searchNome.toLowerCase()))) &&
       (searchCargo === "" ||
-        funcionario.cargo.toLowerCase().includes(searchCargo.toLowerCase())) &&
+        (funcionario.cargo && funcionario.cargo.toLowerCase().includes(searchCargo.toLowerCase()))) &&
       (searchIdade === "" || funcionario.idade === Number(searchIdade)) &&
       (searchSexo === "" ||
-        funcionario.sexo.toLowerCase().includes(searchSexo.toLowerCase()))
+        (funcionario.sexo && funcionario.sexo.toLowerCase().includes(searchSexo.toLowerCase())))
     );
   });
 

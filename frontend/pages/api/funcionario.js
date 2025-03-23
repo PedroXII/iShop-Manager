@@ -19,7 +19,8 @@ export default async function handler(req, res) {
   
         const data = await response.json();
         if (response.ok) {
-          res.status(200).json(data.results);
+          // Garantir que os dados sejam um array
+          res.status(200).json(Array.isArray(data.results) ? data.results : []);
         } else {
           res.status(400).json({ message: data.error || "Erro ao buscar funcionários." });
         }
