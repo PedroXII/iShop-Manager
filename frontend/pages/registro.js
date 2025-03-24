@@ -67,7 +67,6 @@ export default function Registro() {
       ...formData,
       superiorUsername: "",
       superiorPassword: "",
-      nomeLoja: "",
       lojaExistente: "",
     });
   };
@@ -88,6 +87,24 @@ export default function Registro() {
     // Validação de idade mínima
     if (Number(formData.idade) < 18) {
       setError("É necessário ter pelo menos 18 anos para se registrar.");
+      return;
+    }
+
+    // Verificação adicional para loja existente
+    if ((nivel === "Usuário" || (nivel === "Administrador" && acao === "lojaExistente")) {
+      if (!formData.lojaExistente) {
+        setError("Por favor, selecione uma loja.");
+        return;
+      }
+      if (!formData.superiorUsername || !formData.superiorPassword) {
+        setError("Credenciais do administrador são obrigatórias.");
+        return;
+      }
+    }
+
+    // Verificação adicional para nova loja
+    if (nivel === "Administrador" && acao === "novaLoja" && !formData.nomeLoja) {
+      setError("O nome da nova loja é obrigatório.");
       return;
     }
 
@@ -115,26 +132,26 @@ export default function Registro() {
       });
 
       const data = await response.json();
-      if (response.ok) {
-        alert("Usuário registrado com sucesso!");
-        // Resetar formulário após sucesso
-        setFormData({
-          username: "",
-          password: "",
-          confirmPassword: "",
-          idade: "",
-          superiorUsername: "",
-          superiorPassword: "",
-          nomeLoja: "",
-          lojaExistente: "",
-        });
-        setNivel("Usuário");
-        setAcao(null);
-      } else {
-        setError(data.message || "Erro ao registrar usuário.");
+      if (!response.ok) {
+        throw new Error(data.message || "Erro ao registrar usuário.");
       }
+
+      alert("Usuário registrado com sucesso!");
+      // Resetar formulário após sucesso
+      setFormData({
+        username: "",
+        password: "",
+        confirmPassword: "",
+        idade: "",
+        superiorUsername: "",
+        superiorPassword: "",
+        nomeLoja: "",
+        lojaExistente: "",
+      });
+      setNivel("Usuário");
+      setAcao(null);
     } catch (error) {
-      setError("Erro ao conectar com o servidor.");
+      setError(error.message || "Erro ao registrar usuário.");
     }
   };
 
@@ -219,7 +236,7 @@ export default function Registro() {
                         />
                       </div>
                       <div className="col-md-6">
-                        <label className="form-label">Idade</label>
+                        <label className="form-label">Idade (mínimo 18)</label>
                         <input
                           type="number"
                           className="form-control"
@@ -290,7 +307,7 @@ export default function Registro() {
                           name="nomeLoja"
                           value={formData.nomeLoja}
                           onChange={handleChange}
-                          required={nivel === "Administrador" && acao === "novaLoja"}
+                          required
                         />
                       </div>
                     )}
@@ -352,7 +369,7 @@ export default function Registro() {
             </div>
           </section>
 
-          <footer className="d-flex align-items-center justify-content-center py-3 bg-light" id="bottom">
+          <footer className="d-flex align-items-center justify-content-center py-3" id="bottom">
             <p className="mb-0">&copy;iShop Manager 2025. Todos os direitos reservados.</p>
           </footer>
         </main>

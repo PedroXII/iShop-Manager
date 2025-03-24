@@ -56,7 +56,6 @@ export default async function handler(req, res) {
             },
             body: JSON.stringify({
               nome: nomeLoja,
-              // primeiroAdministrador será atualizado depois de criar o usuário
             }),
           });
 
@@ -97,9 +96,17 @@ export default async function handler(req, res) {
             return res.status(403).json({ message: "O superior não tem permissão para criar administradores." });
           }
 
-          // Verificar se a loja do superior é a mesma selecionada
-          if (!superiorData.loja || superiorData.loja.objectId !== lojaExistente) {
-            return res.status(403).json({ message: "O superior não pertence à loja selecionada." });
+          // Verificação reforçada da loja
+          if (!superiorData.loja) {
+            return res.status(403).json({ message: "O superior não está associado a nenhuma loja." });
+          }
+
+          // Comparação segura dos IDs das lojas
+          if (superiorData.loja.objectId.toString() !== lojaExistente.toString()) {
+            return res.status(403).json({ 
+              message: "O superior não pertence à loja selecionada.",
+              detail: `Loja do superior: ${superiorData.loja.objectId}, Loja selecionada: ${lojaExistente}`
+            });
           }
 
           lojaId = lojaExistente;
@@ -135,9 +142,17 @@ export default async function handler(req, res) {
           return res.status(403).json({ message: "O superior não tem permissão para criar usuários." });
         }
 
-        // Verificar se a loja do superior é a mesma selecionada
-        if (!superiorData.loja || superiorData.loja.objectId !== lojaExistente) {
-          return res.status(403).json({ message: "O superior não pertence à loja selecionada." });
+        // Verificação reforçada da loja
+        if (!superiorData.loja) {
+          return res.status(403).json({ message: "O superior não está associado a nenhuma loja." });
+        }
+
+        // Comparação segura dos IDs das lojas
+        if (superiorData.loja.objectId.toString() !== lojaExistente.toString()) {
+          return res.status(403).json({ 
+            message: "O superior não pertence à loja selecionada.",
+            detail: `Loja do superior: ${superiorData.loja.objectId}, Loja selecionada: ${lojaExistente}`
+          });
         }
 
         lojaId = lojaExistente;
