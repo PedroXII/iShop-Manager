@@ -50,11 +50,25 @@ export default function Registro() {
 
   const handleNivelChange = (e) => {
     setNivel(e.target.value);
-    setAcao(null); // Resetar a ação ao mudar o nível de acesso
+    setAcao(null);
+    setFormData({
+      ...formData,
+      superiorUsername: "",
+      superiorPassword: "",
+      nomeLoja: "",
+      lojaExistente: "",
+    });
   };
 
   const handleAcaoChange = (acaoSelecionada) => {
     setAcao(acaoSelecionada);
+    setFormData({
+      ...formData,
+      superiorUsername: "",
+      superiorPassword: "",
+      nomeLoja: "",
+      lojaExistente: "",
+    });
   };
 
   const handleChange = (e) => {
@@ -76,14 +90,15 @@ export default function Registro() {
       password: formData.password,
       acess: nivel,
       idade: Number(formData.idade),
-      superiorUsername: nivel === "Usuário" ? formData.superiorUsername : null,
-      superiorPassword: nivel === "Usuário" ? formData.superiorPassword : null,
-      nomeLoja: formData.nomeLoja,
-      loja: acao === "novaLoja" ? formData.nomeLoja : formData.lojaExistente,
-      acao: acao,
+      superiorUsername: nivel === "Usuário" || (nivel === "Administrador" && acao === "lojaExistente") ? formData.superiorUsername : undefined,
+      superiorPassword: nivel === "Usuário" || (nivel === "Administrador" && acao === "lojaExistente") ? formData.superiorPassword : undefined,
+      nomeLoja: nivel === "Administrador" && acao === "novaLoja" ? formData.nomeLoja : undefined,
+      lojaExistente: nivel === "Usuário" || (nivel === "Administrador" && acao === "lojaExistente") ? formData.lojaExistente : undefined,
+      acao: nivel === "Administrador" ? acao : undefined,
     };
 
     try {
+      setError("");
       const response = await fetch("/api/register", {
         method: "POST",
         headers: {
@@ -95,8 +110,21 @@ export default function Registro() {
       const data = await response.json();
       if (response.ok) {
         alert("Usuário registrado com sucesso!");
+        // Resetar formulário após sucesso
+        setFormData({
+          username: "",
+          password: "",
+          confirmPassword: "",
+          idade: "",
+          superiorUsername: "",
+          superiorPassword: "",
+          nomeLoja: "",
+          lojaExistente: "",
+        });
+        setNivel("Usuário");
+        setAcao(null);
       } else {
-        setError("Erro: " + (data.message || "Erro ao registrar usuário."));
+        setError(data.message || "Erro ao registrar usuário.");
       }
     } catch (error) {
       setError("Erro ao registrar usuário.");
@@ -156,7 +184,15 @@ export default function Registro() {
                       <div>
                         {["Usuário", "Administrador"].map((opcao) => (
                           <div className="form-check" key={opcao}>
-                            <input className="form-check-input" type="radio" name="nivel" value={opcao} checked={nivel === opcao} onChange={handleNivelChange} />
+                            <input
+                              className="form-check-input"
+                              type="radio"
+                              name="nivel"
+                              value={opcao}
+                              checked={nivel === opcao}
+                              onChange={handleNivelChange}
+                              required
+                            />
                             <label className="form-check-label">{opcao}</label>
                           </div>
                         ))}
@@ -166,22 +202,53 @@ export default function Registro() {
                     {/* Campos básicos para todos os níveis de acesso */}
                     <div className="mb-3">
                       <label className="form-label">Nome de Usuário</label>
-                      <input type="text" className="form-control" name="username" value={formData.username} onChange={handleChange} required />
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="username"
+                        value={formData.username}
+                        onChange={handleChange}
+                        required
+                      />
                     </div>
 
                     <div className="mb-3">
-                      <label className="form-label">Senha</label>
-                      <input type="password" className="form-control" name="password" value={formData.password} onChange={handleChange} required />
+                      <label className="form-label">Senha (mínimo 6 caracteres)</label>
+                      <input
+                        type="password"
+                        className="form-control"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        minLength="6"
+                        required
+                      />
                     </div>
 
                     <div className="mb-3">
                       <label className="form-label">Confirmar Senha</label>
-                      <input type="password" className="form-control" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required />
+                      <input
+                        type="password"
+                        className="form-control"
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        minLength="6"
+                        required
+                      />
                     </div>
 
                     <div className="mb-3">
                       <label className="form-label">Idade</label>
-                      <input type="number" className="form-control" name="idade" value={formData.idade} onChange={handleChange} required />
+                      <input
+                        type="number"
+                        className="form-control"
+                        name="idade"
+                        value={formData.idade}
+                        onChange={handleChange}
+                        min="18"
+                        required
+                      />
                     </div>
 
                     {/* Campos específicos para Usuário */}
@@ -189,7 +256,13 @@ export default function Registro() {
                       <>
                         <div className="mb-3">
                           <label className="form-label">Selecione a Loja</label>
-                          <select className="form-control" name="lojaExistente" value={formData.lojaExistente} onChange={handleChange} required>
+                          <select
+                            className="form-control"
+                            name="lojaExistente"
+                            value={formData.lojaExistente}
+                            onChange={handleChange}
+                            required
+                          >
                             <option value="">Selecione uma loja</option>
                             {lojas.map((loja) => (
                               <option key={loja.objectId} value={loja.objectId}>
@@ -202,12 +275,26 @@ export default function Registro() {
                         <div className="bg-white border p-3 rounded mb-3">
                           <h5>Autenticação do Administrador</h5>
                           <div className="mb-2">
-                            <label className="form-label">Nome de Usuário</label>
-                            <input type="text" className="form-control" name="superiorUsername" value={formData.superiorUsername} onChange={handleChange} required />
+                            <label className="form-label">Nome de Usuário do Administrador</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              name="superiorUsername"
+                              value={formData.superiorUsername}
+                              onChange={handleChange}
+                              required
+                            />
                           </div>
                           <div className="mb-2">
-                            <label className="form-label">Senha</label>
-                            <input type="password" className="form-control" name="superiorPassword" value={formData.superiorPassword} onChange={handleChange} required />
+                            <label className="form-label">Senha do Administrador</label>
+                            <input
+                              type="password"
+                              className="form-control"
+                              name="superiorPassword"
+                              value={formData.superiorPassword}
+                              onChange={handleChange}
+                              required
+                            />
                           </div>
                         </div>
                       </>
@@ -217,28 +304,50 @@ export default function Registro() {
                     {nivel === "Administrador" && (
                       <>
                         <div className="mb-3">
-                          <button type="button" className="btn btn-secondary w-100 mb-2" onClick={() => handleAcaoChange("novaLoja")}>
-                            Cadastrar em uma Nova Loja
-                          </button>
-                          <button type="button" className="btn btn-secondary w-100 mb-2" onClick={() => handleAcaoChange("lojaExistente")}>
-                            Cadastrar em uma Loja Existente
-                          </button>
+                          <label className="form-label">Tipo de Cadastro</label>
+                          <div className="d-flex gap-2">
+                            <button
+                              type="button"
+                              className={`btn ${acao === "novaLoja" ? "btn-primary" : "btn-secondary"} flex-grow-1`}
+                              onClick={() => handleAcaoChange("novaLoja")}
+                            >
+                              Nova Loja
+                            </button>
+                            <button
+                              type="button"
+                              className={`btn ${acao === "lojaExistente" ? "btn-primary" : "btn-secondary"} flex-grow-1`}
+                              onClick={() => handleAcaoChange("lojaExistente")}
+                            >
+                              Loja Existente
+                            </button>
+                          </div>
                         </div>
 
                         {acao === "novaLoja" && (
-                          <>
-                            <div className="mb-3">
-                              <label className="form-label">Nome da Loja</label>
-                              <input type="text" className="form-control" name="nomeLoja" value={formData.nomeLoja} onChange={handleChange} required />
-                            </div>
-                          </>
+                          <div className="mb-3">
+                            <label className="form-label">Nome da Nova Loja</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              name="nomeLoja"
+                              value={formData.nomeLoja}
+                              onChange={handleChange}
+                              required
+                            />
+                          </div>
                         )}
 
                         {acao === "lojaExistente" && (
                           <>
                             <div className="mb-3">
                               <label className="form-label">Selecione a Loja</label>
-                              <select className="form-control" name="lojaExistente" value={formData.lojaExistente} onChange={handleChange} required>
+                              <select
+                                className="form-control"
+                                name="lojaExistente"
+                                value={formData.lojaExistente}
+                                onChange={handleChange}
+                                required
+                              >
                                 <option value="">Selecione uma loja</option>
                                 {lojas.map((loja) => (
                                   <option key={loja.objectId} value={loja.objectId}>
@@ -251,12 +360,26 @@ export default function Registro() {
                             <div className="bg-white border p-3 rounded mb-3">
                               <h5>Autenticação do Administrador</h5>
                               <div className="mb-2">
-                                <label className="form-label">Nome de Usuário</label>
-                                <input type="text" className="form-control" name="superiorUsername" value={formData.superiorUsername} onChange={handleChange} required />
+                                <label className="form-label">Nome de Usuário do Administrador</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="superiorUsername"
+                                  value={formData.superiorUsername}
+                                  onChange={handleChange}
+                                  required
+                                />
                               </div>
                               <div className="mb-2">
-                                <label className="form-label">Senha</label>
-                                <input type="password" className="form-control" name="superiorPassword" value={formData.superiorPassword} onChange={handleChange} required />
+                                <label className="form-label">Senha do Administrador</label>
+                                <input
+                                  type="password"
+                                  className="form-control"
+                                  name="superiorPassword"
+                                  value={formData.superiorPassword}
+                                  onChange={handleChange}
+                                  required
+                                />
                               </div>
                             </div>
                           </>
@@ -264,7 +387,9 @@ export default function Registro() {
                       </>
                     )}
 
-                    <button type="submit" className="btn btn-primary w-100">Registrar</button>
+                    <button type="submit" className="btn btn-primary w-100">
+                      Registrar
+                    </button>
                   </form>
                 )}
               </div>
