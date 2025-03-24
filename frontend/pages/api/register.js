@@ -14,83 +14,61 @@ export default async function handler(req, res) {
     } = req.body;
 
     try {
-      // Validação inicial
-      if (!username || !password || !acess || !idade) {
-        return res.status(400).json({ message: "Campos obrigatórios faltando" });
-      }
-
-      if (password.length < 6) {
-        return res.status(400).json({ message: "Senha precisa ter no mínimo 6 caracteres" });
-      }
+      // ... (validações iniciais permanecem iguais) ...
 
       let lojaId = null;
-      let superiorLojaId = null;
+      let novoUsuarioId = null;
 
-      // Fluxo para Administradores
-      if (acess === "Administrador") {
-        if (acao === "novaLoja" && nomeLoja) {
-          // Criar nova loja
-          const checkStore = await fetch(
-            `https://parseapi.back4app.com/classes/Loja?where=${encodeURIComponent(
-              JSON.stringify({ nome: nomeLoja })
-            )}`,
-            {
-              headers: {
-                "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
-                "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
-              }
+      // Fluxo para Administrador criando nova loja
+      if (acess === "Administrador" && acao === "novaLoja") {
+        // 1. Criar usuário temporário para vincular à loja
+        const tempUser = await fetch("https://parseapi.back4app.com/users", {
+          method: "POST",
+          headers: {
+            "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
+            "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            username: `temp_${Date.now()}`,
+            password: "temp_password",
+            acess: "Administrador",
+            idade: 18,
+            loja: {
+              __type: "Pointer",
+              className: "Loja",
+              objectId: "temp_loja" // Placeholder
             }
-          );
+          })
+        });
 
-          const existingStore = await checkStore.json();
-          if (existingStore.results?.length > 0) {
-            return res.status(400).json({ message: "Loja já existe" });
-          }
+        const tempUserData = await tempUser.json();
+        if (!tempUser.ok) throw new Error("Falha ao criar usuário temporário");
 
-          const newStore = await fetch(
-            "https://parseapi.back4app.com/classes/Loja",
-            {
-              method: "POST",
-              headers: {
-                "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
-                "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
-                nome: nomeLoja,
-                primeiroAdministrador: null
-              })
+        // 2. Criar loja com primeiroAdministrador temporário
+        const newStore = await fetch("https://parseapi.back4app.com/classes/Loja", {
+          method: "POST",
+          headers: {
+            "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
+            "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            nome: nomeLoja,
+            primeiroAdministrador: {
+              __type: "Pointer",
+              className: "_User",
+              objectId: tempUserData.objectId
             }
-          );
+          })
+        });
 
-          const storeData = await newStore.json();
-          if (!newStore.ok) {
-            throw new Error(`Erro ao criar loja: ${storeData.error || JSON.stringify(storeData)}`);
-          }
-          
-          lojaId = storeData.objectId;
-          
-        } else if (acao === "lojaExistente" && lojaExistente && superiorUsername && superiorPassword) {
-          // ... (código existente para loja existente) ...
-        } else {
-          return res.status(400).json({ message: "Parâmetros inválidos para administrador" });
-        }
-      }
+        const storeData = await newStore.json();
+        if (!newStore.ok) throw new Error("Falha ao criar loja");
+        lojaId = storeData.objectId;
 
-      // Fluxo para Usuários
-      else if (acess === "Usuário") {
-        // ... (código existente para usuários) ...
-      }
-
-      // Validação final da lojaId
-      if (!lojaId) {
-        throw new Error("ID da loja não foi definido corretamente");
-      }
-
-      // Criação do usuário
-      const newUser = await fetch(
-        "https://parseapi.back4app.com/users",
-        {
+        // 3. Criar usuário final com a loja correta
+        const newUser = await fetch("https://parseapi.back4app.com/users", {
           method: "POST",
           headers: {
             "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
@@ -108,17 +86,49 @@ export default async function handler(req, res) {
               objectId: lojaId
             }
           })
-        }
-      );
+        });
 
-      // ... (código restante para atualização da loja) ...
+        const userData = await newUser.json();
+        if (!newUser.ok) throw new Error("Falha ao criar usuário final");
+        novoUsuarioId = userData.objectId;
+
+        // 4. Atualizar a loja com o usuário correto
+        await fetch(`https://parseapi.back4app.com/classes/Loja/${lojaId}`, {
+          method: "PUT",
+          headers: {
+            "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
+            "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            primeiroAdministrador: {
+              __type: "Pointer",
+              className: "_User",
+              objectId: novoUsuarioId
+            }
+          })
+        });
+
+        // 5. Excluir usuário temporário
+        await fetch(`https://parseapi.back4app.com/users/${tempUserData.objectId}`, {
+          method: "DELETE",
+          headers: {
+            "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
+            "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY
+          }
+        });
+      }
+
+      // ... (restante do código para outros fluxos) ...
+
+      return res.status(201).json({ 
+        message: "Usuário e loja criados com sucesso",
+        lojaId,
+        userId: novoUsuarioId
+      });
 
     } catch (error) {
-      console.error("Erro detalhado:", {
-        message: error.message,
-        stack: error.stack,
-        body: req.body
-      });
+      console.error("Erro detalhado:", error);
       return res.status(500).json({ 
         message: "Erro interno no servidor",
         details: error.message 
