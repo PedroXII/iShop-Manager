@@ -20,7 +20,34 @@ export default async function handler(req, res) {
   try {
     let lojaId = null;
 
-    if (acess === "Administrador" || acess === "Usuário") {
+    if (acess === "Administrador" && acao === "novaLoja") {
+      if (!nomeLoja) {
+        console.error("Erro: Nome da nova loja ausente");
+        return res.status(400).json({ message: "O nome da nova loja é obrigatório" });
+      }
+
+      console.log("Criando nova loja:", nomeLoja);
+
+      const lojaResponse = await fetch("https://parseapi.back4app.com/classes/Loja", {
+        method: "POST",
+        headers: {
+          "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
+          "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ nome: nomeLoja })
+      });
+
+      const lojaData = await lojaResponse.json();
+      console.log("Nova loja criada:", lojaData);
+      
+      if (!lojaResponse.ok) {
+        console.error("Erro ao criar loja");
+        return res.status(400).json({ message: "Erro ao criar loja" });
+      }
+
+      lojaId = lojaData.objectId;
+    } else {
       if (!superiorUsername || !superiorPassword || !lojaExistente) {
         console.error("Erro: Credenciais do superior ausentes");
         return res.status(400).json({ message: "Credenciais do superior e loja são obrigatórias" });
@@ -76,35 +103,6 @@ export default async function handler(req, res) {
       }
 
       lojaId = lojaExistente;
-    }
-
-    if (acess === "Administrador" && acao === "novaLoja") {
-      if (!nomeLoja) {
-        console.error("Erro: Nome da nova loja ausente");
-        return res.status(400).json({ message: "O nome da nova loja é obrigatório" });
-      }
-
-      console.log("Criando nova loja:", nomeLoja);
-
-      const lojaResponse = await fetch("https://parseapi.back4app.com/classes/Loja", {
-        method: "POST",
-        headers: {
-          "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
-          "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ nome: nomeLoja })
-      });
-
-      const lojaData = await lojaResponse.json();
-      console.log("Nova loja criada:", lojaData);
-      
-      if (!lojaResponse.ok) {
-        console.error("Erro ao criar loja");
-        return res.status(400).json({ message: "Erro ao criar loja" });
-      }
-
-      lojaId = lojaData.objectId;
     }
 
     console.log("Criando novo usuário:", username);
