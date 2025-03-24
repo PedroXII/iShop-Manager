@@ -17,7 +17,7 @@ export default async function handler(req, res) {
 
     try {
       let lojaId = null;
-      let superiorLojaId = null;
+      let superiorData = null;
 
       // Lógica para Administradores
       if (acess === "Administrador") {
@@ -56,11 +56,7 @@ export default async function handler(req, res) {
             },
             body: JSON.stringify({
               nome: nomeLoja,
-              primeiroAdministrador: {
-                __type: "Pointer",
-                className: "_User",
-                objectId: username, // Será atualizado após criar o usuário
-              },
+              // primeiroAdministrador será atualizado depois de criar o usuário
             }),
           });
 
@@ -91,7 +87,7 @@ export default async function handler(req, res) {
             }),
           });
 
-          const superiorData = await superiorResponse.json();
+          superiorData = await superiorResponse.json();
           if (!superiorResponse.ok) {
             return res.status(400).json({ message: "Superior não encontrado ou senha incorreta." });
           }
@@ -102,12 +98,11 @@ export default async function handler(req, res) {
           }
 
           // Verificar se a loja do superior é a mesma selecionada
-          if (superiorData.loja.objectId !== lojaExistente) {
+          if (!superiorData.loja || superiorData.loja.objectId !== lojaExistente) {
             return res.status(403).json({ message: "O superior não pertence à loja selecionada." });
           }
 
           lojaId = lojaExistente;
-          superiorLojaId = superiorData.loja.objectId;
         }
       }
       // Lógica para Usuários
@@ -130,7 +125,7 @@ export default async function handler(req, res) {
           }),
         });
 
-        const superiorData = await superiorResponse.json();
+        superiorData = await superiorResponse.json();
         if (!superiorResponse.ok) {
           return res.status(400).json({ message: "Superior não encontrado ou senha incorreta." });
         }
@@ -141,7 +136,7 @@ export default async function handler(req, res) {
         }
 
         // Verificar se a loja do superior é a mesma selecionada
-        if (superiorData.loja.objectId !== lojaExistente) {
+        if (!superiorData.loja || superiorData.loja.objectId !== lojaExistente) {
           return res.status(403).json({ message: "O superior não pertence à loja selecionada." });
         }
 
@@ -161,11 +156,11 @@ export default async function handler(req, res) {
           password,
           acess,
           idade: Number(idade),
-          loja: {
+          loja: lojaId ? {
             __type: "Pointer",
             className: "Loja",
             objectId: lojaId,
-          },
+          } : undefined,
         }),
       });
 
