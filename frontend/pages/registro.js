@@ -91,7 +91,7 @@ export default function Registro() {
     }
 
     // Verificação adicional para loja existente
-    if ((nivel === "Usuário" || (nivel === "Administrador" && acao === "lojaExistente")) {
+    if ((nivel === "Usuário" || (nivel === "Administrador" && acao === "lojaExistente"))) {
       if (!formData.lojaExistente) {
         setError("Por favor, selecione uma loja.");
         return;
