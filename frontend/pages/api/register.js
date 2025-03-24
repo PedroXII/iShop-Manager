@@ -10,7 +10,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: "Todos os campos básicos são obrigatórios." });
     }
 
-    // Validação de senha
     if (password.length < 6) {
       return res.status(400).json({ message: "A senha deve ter no mínimo 6 caracteres." });
     }
@@ -19,19 +18,16 @@ export default async function handler(req, res) {
       let lojaId = null;
       let superiorData = null;
 
-      // Lógica para Administradores
       if (acess === "Administrador") {
         if (!acao) {
           return res.status(400).json({ message: "Selecione uma ação (nova loja ou loja existente)." });
         }
 
-        // Para nova loja
         if (acao === "novaLoja") {
           if (!nomeLoja) {
             return res.status(400).json({ message: "O nome da nova loja é obrigatório." });
           }
 
-          // Verificar se loja já existe
           const checkLoja = await fetch(`https://parseapi.back4app.com/classes/Loja?where=${encodeURIComponent(JSON.stringify({ nome: nomeLoja }))}`, {
             method: "GET",
             headers: {
@@ -46,7 +42,6 @@ export default async function handler(req, res) {
             return res.status(400).json({ message: "Uma loja com este nome já existe." });
           }
 
-          // Criar a nova loja
           const responseLoja = await fetch("https://parseapi.back4app.com/classes/Loja", {
             method: "POST",
             headers: {
@@ -66,14 +61,12 @@ export default async function handler(req, res) {
 
           lojaId = lojaData.objectId;
         }
-        // Para loja existente
         else if (acao === "lojaExistente") {
           if (!superiorUsername || !superiorPassword || !lojaExistente) {
             return res.status(400).json({ message: "Credenciais do superior e loja são obrigatórias." });
           }
 
-          // Verificar superior
-          const superiorResponse = await fetch("https://parseapi.back4app.com/login", {
+          const superiorResponse = await fetch(`https://parseapi.back4app.com/login?include=loja`, {
             method: "POST",
             headers: {
               "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
@@ -91,17 +84,18 @@ export default async function handler(req, res) {
             return res.status(400).json({ message: "Superior não encontrado ou senha incorreta." });
           }
 
-          // Verificar se é administrador
           if (superiorData.acess !== "Administrador") {
             return res.status(403).json({ message: "O superior não tem permissão para criar administradores." });
           }
 
-          // Verificação reforçada da loja
-          if (!superiorData.loja) {
-            return res.status(403).json({ message: "O superior não está associado a nenhuma loja." });
+          if (!superiorData.loja || !superiorData.loja.objectId) {
+            console.log("Dados completos do superior:", superiorData);
+            return res.status(403).json({ 
+              message: "O superior não está associado a nenhuma loja.",
+              debugData: superiorData
+            });
           }
 
-          // Comparação segura dos IDs das lojas
           if (superiorData.loja.objectId.toString() !== lojaExistente.toString()) {
             return res.status(403).json({ 
               message: "O superior não pertence à loja selecionada.",
@@ -112,14 +106,12 @@ export default async function handler(req, res) {
           lojaId = lojaExistente;
         }
       }
-      // Lógica para Usuários
       else if (acess === "Usuário") {
         if (!superiorUsername || !superiorPassword || !lojaExistente) {
           return res.status(400).json({ message: "Credenciais do superior e loja são obrigatórias." });
         }
 
-        // Verificar superior
-        const superiorResponse = await fetch("https://parseapi.back4app.com/login", {
+        const superiorResponse = await fetch(`https://parseapi.back4app.com/login?include=loja`, {
           method: "POST",
           headers: {
             "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
@@ -137,17 +129,17 @@ export default async function handler(req, res) {
           return res.status(400).json({ message: "Superior não encontrado ou senha incorreta." });
         }
 
-        // Verificar se é administrador
         if (superiorData.acess !== "Administrador") {
           return res.status(403).json({ message: "O superior não tem permissão para criar usuários." });
         }
 
-        // Verificação reforçada da loja
-        if (!superiorData.loja) {
-          return res.status(403).json({ message: "O superior não está associado a nenhuma loja." });
+        if (!superiorData.loja || !superiorData.loja.objectId) {
+          return res.status(403).json({ 
+            message: "O superior não está associado a nenhuma loja.",
+            debugData: superiorData
+          });
         }
 
-        // Comparação segura dos IDs das lojas
         if (superiorData.loja.objectId.toString() !== lojaExistente.toString()) {
           return res.status(403).json({ 
             message: "O superior não pertence à loja selecionada.",
@@ -158,7 +150,6 @@ export default async function handler(req, res) {
         lojaId = lojaExistente;
       }
 
-      // Criar o usuário
       const userResponse = await fetch("https://parseapi.back4app.com/users", {
         method: "POST",
         headers: {
@@ -181,7 +172,6 @@ export default async function handler(req, res) {
 
       const userData = await userResponse.json();
       if (!userResponse.ok) {
-        // Se falhou, apagar a loja criada (se for o caso)
         if (acao === "novaLoja" && lojaId) {
           await fetch(`https://parseapi.back4app.com/classes/Loja/${lojaId}`, {
             method: "DELETE",
@@ -194,7 +184,6 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: userData.error || "Erro ao criar usuário." });
       }
 
-      // Se for administrador de nova loja, atualizar o primeiroAdministrador
       if (acao === "novaLoja" && lojaId) {
         await fetch(`https://parseapi.back4app.com/classes/Loja/${lojaId}`, {
           method: "PUT",
