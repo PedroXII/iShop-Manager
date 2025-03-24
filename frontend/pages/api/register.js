@@ -42,12 +42,13 @@ export default async function handler(req, res) {
         }
 
         // Verificar se o superior é um administrador
-        if (dataSuperior.acess !== "Administrador") {
+        if (dataSuperior.acess !== "Administrador" && dataSuperior.acess !== "Primeiro Administrador") {
           return res.status(403).json({ message: "O superior não tem permissão para criar este usuário." });
         }
 
         // Verificar se o superior pertence à mesma loja
         if (dataSuperior.loja.objectId !== loja) {
+          console.log("Loja do superior:", dataSuperior.loja.objectId, "Loja do usuário:", loja);
           return res.status(403).json({ message: "O superior não pertence à mesma loja." });
         }
       }
@@ -80,11 +81,11 @@ export default async function handler(req, res) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            nome: nomeLoja, // Nome da nova loja
+            nome: nomeLoja,
             primeiroAdministrador: {
               __type: "Pointer",
               className: "_User",
-              objectId: username, // ID do administrador que está criando a loja
+              objectId: username, // Será atualizado após criar o usuário
             },
           }),
         });
@@ -113,7 +114,11 @@ export default async function handler(req, res) {
           password,
           acess,
           idade: Number(idade),
-          loja: lojaId, // ID da loja
+          loja: {
+            __type: "Pointer",
+            className: "Loja",
+            objectId: lojaId
+          },
         }),
       });
 
@@ -121,6 +126,25 @@ export default async function handler(req, res) {
       console.log("Resposta do Back4App:", data);
 
       if (response.ok) {
+        // Atualizar a loja com o primeiroAdministrador se for uma nova loja
+        if (acess === "Administrador" && acao === "novaLoja") {
+          await fetch(`https://parseapi.back4app.com/classes/Loja/${lojaId}`, {
+            method: "PUT",
+            headers: {
+              "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
+              "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              primeiroAdministrador: {
+                __type: "Pointer",
+                className: "_User",
+                objectId: data.objectId,
+              },
+            }),
+          });
+        }
+        
         res.status(200).json({ message: "Usuário registrado com sucesso!" });
       } else {
         console.error("Erro ao criar usuário:", data);
