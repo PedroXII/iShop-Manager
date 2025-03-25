@@ -47,62 +47,6 @@ export default async function handler(req, res) {
       }
 
       lojaId = lojaData.objectId;
-    } else {
-      if (!superiorUsername || !superiorPassword || !lojaExistente) {
-        console.error("Erro: Credenciais do superior ausentes");
-        return res.status(400).json({ message: "Credenciais do superior e loja são obrigatórias" });
-      }
-
-      console.log("Verificando superior:", superiorUsername);
-
-      const loginResponse = await fetch("https://parseapi.back4app.com/login", {
-        method: "POST",
-        headers: {
-          "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
-          "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ username: superiorUsername, password: superiorPassword })
-      });
-
-      if (!loginResponse.ok) {
-        console.error("Erro: Superior não encontrado ou senha incorreta");
-        return res.status(400).json({ message: "Superior não encontrado ou senha incorreta" });
-      }
-
-      const loginData = await loginResponse.json();
-      console.log("Dados do superior:", loginData);
-      
-      if (loginData.acess !== "Administrador") {
-        console.error("Erro: Superior sem permissão para criar usuários");
-        return res.status(403).json({ message: "O superior não tem permissão para criar usuários" });
-      }
-
-      console.log("Buscando loja do superior...");
-      const userResponse = await fetch(`https://parseapi.back4app.com/users/${loginData.objectId}?include=loja`, {
-        headers: {
-          "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
-          "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY
-        }
-      });
-
-      const userData = await userResponse.json();
-      console.log("Dados completos do superior:", userData);
-      
-      if (!userData.loja || !userData.loja.objectId) {
-        console.error("Erro: Superior sem loja associada");
-        return res.status(403).json({ message: "O superior não está associado a nenhuma loja" });
-      }
-
-      if (userData.loja.objectId !== lojaExistente) {
-        console.error("Erro: Superior não pertence à loja selecionada", {
-          lojaSuperior: userData.loja.objectId,
-          lojaSelecionada: lojaExistente
-        });
-        return res.status(403).json({ message: "O superior não pertence à loja selecionada" });
-      }
-
-      lojaId = lojaExistente;
     }
 
     console.log("Criando novo usuário:", username);
@@ -119,11 +63,7 @@ export default async function handler(req, res) {
         password,
         acess,
         idade: Number(idade),
-        loja: {
-          __type: "Pointer",
-          className: "Loja",
-          objectId: lojaId
-        }
+        loja: lojaId ? { __type: "Pointer", className: "Loja", objectId: lojaId } : undefined
       })
     });
 
@@ -133,6 +73,25 @@ export default async function handler(req, res) {
     if (!newUserResponse.ok) {
       console.error("Erro ao criar usuário", newUserData);
       return res.status(400).json({ message: "Erro ao criar usuário" });
+    }
+
+    if (acao === "novaLoja" && lojaId) {
+      console.log("Atualizando loja com primeiroAdministrador:", newUserData.objectId);
+      await fetch(`https://parseapi.back4app.com/classes/Loja/${lojaId}`, {
+        method: "PUT",
+        headers: {
+          "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
+          "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          primeiroAdministrador: {
+            __type: "Pointer",
+            className: "_User",
+            objectId: newUserData.objectId
+          }
+        })
+      });
     }
 
     return res.status(200).json({ message: "Usuário registrado com sucesso" });
