@@ -45,8 +45,6 @@ export default function Armazem() {
     setLoading(true);
     setError('');
     try {
-      console.log(`Enviando requisição ${method} para ${url}`, body);
-      
       const response = await fetch(url, {
         method,
         headers: {
@@ -60,14 +58,11 @@ export default function Armazem() {
       const data = await response.json();
       
       if (!response.ok) {
-        console.error("Erro na resposta da API:", data);
         throw new Error(data.message || `Erro ${response.status}`);
       }
 
-      console.log("Resposta da API:", data);
       return data;
     } catch (error) {
-      console.error("Erro na chamada API:", error);
       setError(error.message);
       return null;
     } finally {
@@ -76,10 +71,13 @@ export default function Armazem() {
   };
 
   const pesquisarArmazens = async () => {
-    console.log("Iniciando pesquisa com filtros:", filtros);
-    const data = await handleApiCall('/api/armazem', 'POST', { filters: filtros });
+    const data = await handleApiCall('/api/armazem', 'POST', { 
+      filters: {
+        ...filtros,
+        loja: userData.loja
+      } 
+    });
     if (data) {
-      console.log("Armazéns encontrados:", data);
       setArmazens(data);
     }
   };
@@ -106,15 +104,12 @@ export default function Armazem() {
       loja: userData.loja
     };
 
-    console.log("Preparando para salvar armazém:", armazemData);
-
     const url = editando ? `/api/armazem?id=${editando}` : '/api/armazem';
     const method = editando ? 'PUT' : 'POST';
     
     const data = await handleApiCall(url, method, armazemData);
     
     if (data) {
-      console.log("Armazém salvo com sucesso:", data);
       setNovoArmazem({ 
         nome: '', 
         capacidadeTotal: '',
@@ -134,7 +129,6 @@ export default function Armazem() {
     if (window.confirm('Tem certeza que deseja excluir este armazém?')) {
       const data = await handleApiCall(`/api/armazem?id=${id}`, 'DELETE');
       if (data?.success) {
-        console.log("Armazém excluído com sucesso");
         pesquisarArmazens();
       }
     }
@@ -293,7 +287,6 @@ export default function Armazem() {
                           placeholder="Nome do armazém"
                           value={novoArmazem.nome}
                           onChange={(e) => setNovoArmazem({...novoArmazem, nome: e.target.value})}
-                          required
                         />
                       </div>
                       <div className="col-md-6">
@@ -305,7 +298,6 @@ export default function Armazem() {
                           min="0"
                           value={novoArmazem.capacidadeTotal}
                           onChange={(e) => setNovoArmazem({...novoArmazem, capacidadeTotal: e.target.value})}
-                          required
                         />
                       </div>
                     </div>

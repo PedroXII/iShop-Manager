@@ -9,56 +9,68 @@ export default async function handler(req, res) {
       "Content-Type": "application/json",
     };
   
-    console.log("Requisição recebida:", req.method, req.query, req.body);
-  
     try {
-      // Listar Armazéns (GET)
-      if (req.method === "GET") {
-        const { loja } = req.query;
+      const userLoja = req.headers['x-user-loja'];
+      const userAcess = req.headers['x-user-acess'];
   
-        if (!loja) {
-          throw new Error("O campo 'loja' é obrigatório.");
+      if (!userLoja) {
+        throw new Error("Acesso não autorizado: loja não identificada");
+      }
+  
+      // Listar Armazéns com filtros (POST)
+      if (req.method === "POST") {
+        const { filters } = req.body;
+        const { nome, localizacao, capacidadeMin, capacidadeMax } = filters || {};
+        
+        let where = {
+          loja: userLoja
+        };
+  
+        if (nome) where.nome = { $regex: nome, $options: 'i' };
+        if (localizacao) {
+          where.$or = [
+            { 'localizacao.pais': { $regex: localizacao, $options: 'i' } },
+            { 'localizacao.estado': { $regex: localizacao, $options: 'i' } },
+            { 'localizacao.cidade': { $regex: localizacao, $options: 'i' } }
+          ];
+        }
+        if (capacidadeMin) where.capacidadeTotal = { $gte: Number(capacidadeMin) };
+        if (capacidadeMax) {
+          where.capacidadeTotal = where.capacidadeTotal || {};
+          where.capacidadeTotal.$lte = Number(capacidadeMax);
         }
   
-        const response = await fetch(`${BASE_URL}?where={"loja":"${loja}"}`, {
+        const response = await fetch(`${BASE_URL}?where=${encodeURIComponent(JSON.stringify(where))}`, {
           method: "GET",
           headers,
         });
   
         if (!response.ok) {
           const errorData = await response.json();
-          console.error("Erro ao carregar armazéns:", errorData);
           throw new Error(errorData.message || "Erro ao carregar armazéns.");
         }
   
         const data = await response.json();
-        console.log("Armazéns carregados:", data.results);
         res.status(200).json(data.results);
       }
   
       // Adicionar Armazém (POST)
       else if (req.method === "POST") {
-        const { nome, capacidadeTotal, CEP, pais, estado, cidade, rua, complemento, loja } = req.body;
-  
-        if (!loja) {
-          throw new Error("O campo 'loja' é obrigatório.");
-        }
+        const { nome, capacidadeTotal, localizacao } = req.body;
   
         const body = JSON.stringify({
           nome,
-          capacidadeTotal: capacidadeTotal || 0,
-          capacidadeOcupada: 0, // Valor padrão
-          CEP: CEP || "",
-          pais: pais || "",
-          estado: estado || "",
-          cidade: cidade || "",
-          rua: rua || "",
-          complemento: complemento || "",
-          loja,
-          ACL: { [loja]: { read: true, write: true } } // Permissões de acesso
+          capacidadeTotal: Number(capacidadeTotal) || 0,
+          capacidadeOcupada: 0,
+          localizacao: {
+            pais: localizacao?.pais || "",
+            estado: localizacao?.estado || "",
+            cidade: localizacao?.cidade || "",
+            endereco: localizacao?.endereco || ""
+          },
+          loja: userLoja,
+          ACL: { [userLoja]: { read: true, write: true } }
         });
-  
-        console.log("Corpo da requisição:", body);
   
         const response = await fetch(BASE_URL, {
           method: "POST",
@@ -68,58 +80,67 @@ export default async function handler(req, res) {
   
         if (!response.ok) {
           const errorData = await response.json();
-          console.error("Erro ao adicionar armazém:", errorData);
           throw new Error(errorData.message || "Erro ao adicionar armazém.");
         }
   
         const data = await response.json();
-        console.log("Armazém adicionado:", data);
         res.status(201).json(data);
       }
   
       // Editar Armazém (PUT)
       else if (req.method === "PUT") {
         const { objectId } = req.query;
-        const { nome, capacidadeTotal, capacidadeOcupada, CEP, pais, estado, cidade, rua, complemento, loja } = req.body;
+        const { nome, capacidadeTotal, localizacao } = req.body;
   
         if (!objectId) {
           throw new Error("O campo 'objectId' é obrigatório para edição.");
         }
   
-        const body = JSON.stringify({
-          nome,
-          capacidadeTotal,
-          capacidadeOcupada,
-          CEP,
-          pais,
-          estado,
-          cidade,
-          rua,
-          complemento,
-          loja
+        // Primeiro verifica se o armazém pertence à loja do usuário
+        const checkResponse = await fetch(`${BASE_URL}/${objectId}`, {
+          method: "GET",
+          headers,
         });
   
-        const response = await fetch(`${BASE_URL}/${objectId}`, {
+        if (!checkResponse.ok) {
+          const errorData = await checkResponse.json();
+          throw new Error(errorData.message || "Armazém não encontrado.");
+        }
+  
+        const existingArmazem = await checkResponse.json();
+        if (existingArmazem.loja !== userLoja) {
+          throw new Error("Acesso não autorizado: este armazém pertence a outra loja.");
+        }
+  
+        const body = JSON.stringify({
+          nome,
+          capacidadeTotal: Number(capacidadeTotal),
+          localizacao: {
+            pais: localizacao?.pais || existingArmazem.localizacao?.pais || "",
+            estado: localizacao?.estado || existingArmazem.localizacao?.estado || "",
+            cidade: localizacao?.cidade || existingArmazem.localizacao?.cidade || "",
+            endereco: localizacao?.endereco || existingArmazem.localizacao?.endereco || ""
+          }
+        });
+  
+        const updateResponse = await fetch(`${BASE_URL}/${objectId}`, {
           method: "PUT",
           headers,
           body,
         });
   
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error("Erro ao atualizar armazém:", errorData);
+        if (!updateResponse.ok) {
+          const errorData = await updateResponse.json();
           throw new Error(errorData.message || "Erro ao atualizar armazém.");
         }
   
-        const data = await response.json();
-        console.log("Armazém atualizado:", data);
+        const data = await updateResponse.json();
         res.status(200).json(data);
       }
   
       // Excluir Armazém (DELETE)
       else if (req.method === "DELETE") {
         const { objectId } = req.query;
-        const userAcess = req.headers['x-user-acess'];
   
         if (!objectId) {
           throw new Error("O campo 'objectId' é obrigatório para exclusão.");
@@ -129,24 +150,38 @@ export default async function handler(req, res) {
           throw new Error("Apenas administradores podem excluir armazéns.");
         }
   
-        const response = await fetch(`${BASE_URL}/${objectId}`, {
+        // Primeiro verifica se o armazém pertence à loja do usuário
+        const checkResponse = await fetch(`${BASE_URL}/${objectId}`, {
+          method: "GET",
+          headers,
+        });
+  
+        if (!checkResponse.ok) {
+          const errorData = await checkResponse.json();
+          throw new Error(errorData.message || "Armazém não encontrado.");
+        }
+  
+        const existingArmazem = await checkResponse.json();
+        if (existingArmazem.loja !== userLoja) {
+          throw new Error("Acesso não autorizado: este armazém pertence a outra loja.");
+        }
+  
+        const deleteResponse = await fetch(`${BASE_URL}/${objectId}`, {
           method: "DELETE",
           headers,
         });
   
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error("Erro ao excluir armazém:", errorData);
+        if (!deleteResponse.ok) {
+          const errorData = await deleteResponse.json();
           throw new Error(errorData.message || "Erro ao excluir armazém.");
         }
   
-        console.log("Armazém excluído:", objectId);
         res.status(200).json({ success: true, message: "Armazém excluído com sucesso." });
       }
   
       // Método não suportado
       else {
-        res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
+        res.setHeader("Allow", ["POST", "PUT", "DELETE"]);
         res.status(405).json({ message: "Método não permitido." });
       }
     } catch (error) {
