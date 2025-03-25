@@ -17,12 +17,10 @@ export default function Armazem() {
   const [novoArmazem, setNovoArmazem] = useState({
     nome: '',
     capacidadeTotal: '',
-    localizacao: {
-      pais: '',
-      estado: '',
-      cidade: '',
-      endereco: ''
-    }
+    pais: '',
+    estado: '',
+    cidade: '',
+    rua: ''
   });
   const [error, setError] = useState('');
   const [aviso, setAviso] = useState('');
@@ -44,6 +42,8 @@ export default function Armazem() {
         method,
         headers: {
           'Content-Type': 'application/json',
+          'X-Parse-Application-Id': process.env.NEXT_PUBLIC_BACK4APP_APP_ID,
+          'X-Parse-JavaScript-Key': process.env.NEXT_PUBLIC_BACK4APP_JS_KEY,
           'X-User-Loja': loja,
           'X-User-Acess': acess
         },
@@ -72,15 +72,28 @@ export default function Armazem() {
       return;
     }
 
-    const data = await handleApiCall('/api/armazem', 'POST', { 
-      filters: {
-        ...filtros,
-        loja
-      } 
-    });
+    const where = {
+      loja,
+      ...(filtros.nome && { nome: { $regex: filtros.nome, $options: 'i' } }),
+      ...(filtros.localizacao && {
+        $or: [
+          { pais: { $regex: filtros.localizacao, $options: 'i' } },
+          { estado: { $regex: filtros.localizacao, $options: 'i' } },
+          { cidade: { $regex: filtros.localizacao, $options: 'i' } },
+          { rua: { $regex: filtros.localizacao, $options: 'i' } }
+        ]
+      }),
+      ...(filtros.capacidadeMin && { capacidadeTotal: { $gte: Number(filtros.capacidadeMin) } }),
+      ...(filtros.capacidadeMax && { capacidadeTotal: { ...(filtros.capacidadeMin ? { $gte: Number(filtros.capacidadeMin) } : {}), $lte: Number(filtros.capacidadeMax) } })
+    };
+
+    const data = await handleApiCall(
+      `https://parseapi.back4app.com/classes/Armazem?where=${encodeURIComponent(JSON.stringify(where))}`,
+      'GET'
+    );
     
-    if (data) {
-      setArmazens(data);
+    if (data && data.results) {
+      setArmazens(data.results);
     }
   };
 
@@ -89,23 +102,32 @@ export default function Armazem() {
     setError('');
     
     if (!novoArmazem.nome || !novoArmazem.capacidadeTotal) {
-      setAviso('Atenção: Nome e capacidade total são recomendados');
-    } else {
-      setAviso('');
+      setAviso('Atenção: Nome e capacidade total são obrigatórios');
+      return;
+    }
+
+    const loja = localStorage.getItem('loja');
+    if (!loja) {
+      setError('Loja não identificada');
+      return;
     }
 
     const armazemData = {
       nome: novoArmazem.nome,
       capacidadeTotal: Number(novoArmazem.capacidadeTotal),
-      pais: novoArmazem.localizacao.pais,
-      estado: novoArmazem.localizacao.estado,
-      cidade: novoArmazem.localizacao.cidade,
-      rua: novoArmazem.localizacao.endereco,
-      complemento: '',
-      loja: localStorage.getItem('loja')
+      capacidadeOcupada: 0,
+      pais: novoArmazem.pais,
+      estado: novoArmazem.estado,
+      cidade: novoArmazem.cidade,
+      rua: novoArmazem.rua,
+      loja,
+      ACL: { [loja]: { read: true, write: true } }
     };
 
-    const url = editando ? `/api/armazem?id=${editando}` : '/api/armazem';
+    const url = editando 
+      ? `https://parseapi.back4app.com/classes/Armazem/${editando}`
+      : 'https://parseapi.back4app.com/classes/Armazem';
+    
     const method = editando ? 'PUT' : 'POST';
     
     const data = await handleApiCall(url, method, armazemData);
@@ -114,22 +136,24 @@ export default function Armazem() {
       setNovoArmazem({ 
         nome: '', 
         capacidadeTotal: '',
-        localizacao: {
-          pais: '',
-          estado: '',
-          cidade: '',
-          endereco: ''
-        }
+        pais: '',
+        estado: '',
+        cidade: '',
+        rua: ''
       });
       setEditando(null);
+      setAviso('');
       pesquisarArmazens();
     }
   };
 
   const excluirArmazem = async (id) => {
     if (window.confirm('Tem certeza que deseja excluir este armazém?')) {
-      const data = await handleApiCall(`/api/armazem?id=${id}`, 'DELETE');
-      if (data?.success) {
+      const data = await handleApiCall(
+        `https://parseapi.back4app.com/classes/Armazem/${id}`,
+        'DELETE'
+      );
+      if (data) {
         pesquisarArmazens();
       }
     }
@@ -297,6 +321,7 @@ export default function Armazem() {
                           placeholder="Nome do armazém"
                           value={novoArmazem.nome}
                           onChange={(e) => setNovoArmazem({...novoArmazem, nome: e.target.value})}
+                          required
                         />
                       </div>
                       <div className="col-md-6">
@@ -308,6 +333,7 @@ export default function Armazem() {
                           min="0"
                           value={novoArmazem.capacidadeTotal}
                           onChange={(e) => setNovoArmazem({...novoArmazem, capacidadeTotal: e.target.value})}
+                          required
                         />
                       </div>
                     </div>
@@ -319,14 +345,8 @@ export default function Armazem() {
                           type="text"
                           className="form-control"
                           placeholder="Ex: Brasil"
-                          value={novoArmazem.localizacao.pais}
-                          onChange={(e) => setNovoArmazem({
-                            ...novoArmazem,
-                            localizacao: {
-                              ...novoArmazem.localizacao,
-                              pais: e.target.value
-                            }
-                          })}
+                          value={novoArmazem.pais}
+                          onChange={(e) => setNovoArmazem({...novoArmazem, pais: e.target.value})}
                         />
                       </div>
                       <div className="col-md-3">
@@ -335,14 +355,8 @@ export default function Armazem() {
                           type="text"
                           className="form-control"
                           placeholder="Ex: São Paulo"
-                          value={novoArmazem.localizacao.estado}
-                          onChange={(e) => setNovoArmazem({
-                            ...novoArmazem,
-                            localizacao: {
-                              ...novoArmazem.localizacao,
-                              estado: e.target.value
-                            }
-                          })}
+                          value={novoArmazem.estado}
+                          onChange={(e) => setNovoArmazem({...novoArmazem, estado: e.target.value})}
                         />
                       </div>
                       <div className="col-md-3">
@@ -351,14 +365,8 @@ export default function Armazem() {
                           type="text"
                           className="form-control"
                           placeholder="Ex: Campinas"
-                          value={novoArmazem.localizacao.cidade}
-                          onChange={(e) => setNovoArmazem({
-                            ...novoArmazem,
-                            localizacao: {
-                              ...novoArmazem.localizacao,
-                              cidade: e.target.value
-                            }
-                          })}
+                          value={novoArmazem.cidade}
+                          onChange={(e) => setNovoArmazem({...novoArmazem, cidade: e.target.value})}
                         />
                       </div>
                       <div className="col-md-3">
@@ -367,14 +375,8 @@ export default function Armazem() {
                           type="text"
                           className="form-control"
                           placeholder="Rua, número"
-                          value={novoArmazem.localizacao.endereco}
-                          onChange={(e) => setNovoArmazem({
-                            ...novoArmazem,
-                            localizacao: {
-                              ...novoArmazem.localizacao,
-                              endereco: e.target.value
-                            }
-                          })}
+                          value={novoArmazem.rua}
+                          onChange={(e) => setNovoArmazem({...novoArmazem, rua: e.target.value})}
                         />
                       </div>
                     </div>
@@ -396,12 +398,10 @@ export default function Armazem() {
                             setNovoArmazem({ 
                               nome: '', 
                               capacidadeTotal: '',
-                              localizacao: {
-                                pais: '',
-                                estado: '',
-                                cidade: '',
-                                endereco: ''
-                              }
+                              pais: '',
+                              estado: '',
+                              cidade: '',
+                              rua: ''
                             });
                           }}
                         >
@@ -464,12 +464,10 @@ export default function Armazem() {
                                       setNovoArmazem({
                                         nome: armazem.nome,
                                         capacidadeTotal: armazem.capacidadeTotal,
-                                        localizacao: {
-                                          pais: armazem.pais || '',
-                                          estado: armazem.estado || '',
-                                          cidade: armazem.cidade || '',
-                                          endereco: armazem.rua || ''
-                                        }
+                                        pais: armazem.pais || '',
+                                        estado: armazem.estado || '',
+                                        cidade: armazem.cidade || '',
+                                        rua: armazem.rua || ''
                                       });
                                       window.scrollTo({ top: 0, behavior: 'smooth' });
                                     }}
