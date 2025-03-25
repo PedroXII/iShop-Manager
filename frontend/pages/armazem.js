@@ -70,10 +70,13 @@ export default function Armazem() {
       return;
     }
 
-    const params = new URLSearchParams({
-      ...filtros,
-      loja
-    });
+    // Construir query string manualmente
+    const params = new URLSearchParams();
+    if (filtros.nome) params.append('nome', filtros.nome);
+    if (filtros.localizacao) params.append('localizacao', filtros.localizacao);
+    if (filtros.capacidadeMin) params.append('capacidadeMin', filtros.capacidadeMin);
+    if (filtros.capacidadeMax) params.append('capacidadeMax', filtros.capacidadeMax);
+    params.append('loja', loja);
 
     const data = await handleApiCall(`/api/armazem?${params.toString()}`, 'GET');
     
@@ -268,6 +271,7 @@ export default function Armazem() {
                               capacidadeMin: '',
                               capacidadeMax: ''
                             });
+                            setArmazens([]);
                           }}
                         >
                           Limpar
@@ -463,7 +467,7 @@ export default function Armazem() {
                   ) : (
                     <div className="text-center py-4">
                       <div className="alert alert-info">
-                        {filtros.nome || filtros.localizacao 
+                        {filtros.nome || filtros.localizacao || filtros.capacidadeMin || filtros.capacidadeMax
                           ? 'Nenhum armazém encontrado com esses filtros'
                           : 'Realize uma pesquisa para visualizar os armazéns'}
                       </div>
