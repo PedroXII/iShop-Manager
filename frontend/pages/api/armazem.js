@@ -1,206 +1,117 @@
 export default async function handler(req, res) {
-    // 1. Configuração inicial com logs para diagnóstico
-    const { method, headers, body, query } = req;
+    // Configurações iniciais
+    const { method, headers, query } = req;
     const { id } = query;
     const userLoja = headers['x-user-loja'];
     const userAcess = headers['x-user-acess'];
   
-    console.log('[API] Nova requisição:', {
-      method,
-      endpoint: '/api/armazem',
-      userLoja,
-      userAcess: userAcess || 'N/A'
-    });
+    // Verificação de autenticação
+    if (!userLoja) {
+      return res.status(401).json({ success: false, message: 'Não autenticado' });
+    }
   
-    // 2. Verificação rigorosa das credenciais
+    // Verificação das credenciais do Back4App
     if (!process.env.BACK4APP_APP_ID || !process.env.BACK4APP_JS_KEY) {
-      console.error('[API] Erro: Credenciais do Back4App não configuradas', {
-        APP_ID: !!process.env.BACK4APP_APP_ID,
-        JS_KEY: !!process.env.BACK4APP_JS_KEY,
-        NODE_ENV: process.env.NODE_ENV
-      });
-      return res.status(500).json({
-        success: false,
-        message: 'Erro de configuração do servidor',
-        details: 'Credenciais do Back4App ausentes'
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Configuração do servidor incompleta' 
       });
     }
   
-    // 3. Configuração do Back4App (com JS_KEY corrigida)
-    const baseUrl = 'https://parseapi.back4app.com/classes/Armazem';
+    // Headers para o Back4App
     const parseHeaders = {
       'X-Parse-Application-Id': process.env.BACK4APP_APP_ID,
-      'X-Parse-JavaScript-Key': process.env.BACK4APP_JS_KEY, // ← Chave corrigida aqui
+      'X-Parse-JavaScript-Key': process.env.BACK4APP_JS_KEY,
       'Content-Type': 'application/json'
     };
   
-    // 4. Controle de operações
     try {
-      switch (method) {
-        case 'POST': // Pesquisar (POST sem ID) ou Criar (POST com ID)
-          if (id) {
-            // CREATE - Somente administradores
-            if (userAcess !== 'Administrador') {
-              console.warn('[API] Acesso negado: Usuário não é administrador');
-              return res.status(403).json({
-                success: false,
-                message: 'Acesso negado: Requer privilégios de administrador'
-              });
-            }
+      // Operação de Pesquisa (POST sem ID)
+      if (method === 'POST' && !id) {
+        let body;
+        try {
+          body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+        } catch {
+          return res.status(400).json({ success: false, message: 'Body inválido' });
+        }
   
-            console.log('[API] Criando armazém:', body);
-            const createResponse = await fetch(baseUrl, {
-              method: 'POST',
-              headers: parseHeaders,
-              body: JSON.stringify({
-                ...body,
-                loja: userLoja,
-                capacidadeOcupada: 0,
-                ACL: { 
-                  [userLoja]: { read: true, write: true },
-                  '*': { read: false, write: false }
-                }
-              })
-            });
+        const where = {
+          loja: userLoja,
+          ...(body.filters?.nome && { nome: { $regex: body.filters.nome, $options: 'i' } }),
+          ...(body.filters?.localizacao && {
+            $or: [
+              { 'localizacao.pais': { $regex: body.filters.localizacao, $options: 'i' } },
+              { 'localizacao.estado': { $regex: body.filters.localizacao, $options: 'i' } },
+              { 'localizacao.cidade': { $regex: body.filters.localizacao, $options: 'i' } }
+            ]
+          })
+        };
   
-            const createData = await createResponse.json();
-            console.log('[API] Resultado da criação:', {
-              status: createResponse.status,
-              objectId: createData.objectId
-            });
-  
-            return res.status(createResponse.status).json({
-              success: createResponse.ok,
-              ...createData
-            });
-          } else {
-            // SEARCH
-            const where = { loja: userLoja };
-            
-            // Filtros dinâmicos
-            if (body.nome) where.nome = { $regex: body.nome, $options: 'i' };
-            if (body.localizacao) {
-              where.$or = [
-                { 'localizacao.pais': { $regex: body.localizacao, $options: 'i' } },
-                { 'localizacao.estado': { $regex: body.localizacao, $options: 'i' } },
-                { 'localizacao.cidade': { $regex: body.localizacao, $options: 'i' } }
-              ];
-            }
-            if (body.capacidadeMin || body.capacidadeMax) {
-              where.capacidadeTotal = {};
-              if (body.capacidadeMin) where.capacidadeTotal.$gte = Number(body.capacidadeMin);
-              if (body.capacidadeMax) where.capacidadeTotal.$lte = Number(body.capacidadeMax);
-            }
-  
-            console.log('[API] Pesquisando armazéns com filtro:', where);
-            const searchUrl = `${baseUrl}?where=${encodeURIComponent(JSON.stringify(where))}`;
-            const searchResponse = await fetch(searchUrl, { headers: parseHeaders });
-            const searchData = await searchResponse.json();
-  
-            console.log('[API] Resultados encontrados:', searchData.results?.length || 0);
-            return res.status(searchResponse.status).json(searchData.results || []);
-          }
-  
-        case 'PUT': // Atualização
-          if (userAcess !== 'Administrador') {
-            console.warn('[API] Acesso negado para atualização');
-            return res.status(403).json({
-              success: false,
-              message: 'Acesso negado: Requer privilégios de administrador'
-            });
-          }
-  
-          // Verificar existência e permissão
-          console.log('[API] Verificando armazém para atualização:', id);
-          const checkResponse = await fetch(`${baseUrl}/${id}`, { headers: parseHeaders });
-          const existingData = await checkResponse.json();
-          
-          if (!existingData.objectId || existingData.loja !== userLoja) {
-            console.error('[API] Armazém não encontrado ou acesso negado', {
-              objectId: existingData.objectId,
-              lojaArmazem: existingData.loja,
-              lojaUsuario: userLoja
-            });
-            return res.status(404).json({
-              success: false,
-              message: 'Armazém não encontrado ou não pertence à sua loja'
-            });
-          }
-  
-          console.log('[API] Atualizando armazém:', id, body);
-          const updateResponse = await fetch(`${baseUrl}/${id}`, {
-            method: 'PUT',
-            headers: parseHeaders,
-            body: JSON.stringify(body)
-          });
-          const updateData = await updateResponse.json();
-  
-          console.log('[API] Resultado da atualização:', {
-            status: updateResponse.status,
-            objectId: updateData.objectId
-          });
-          return res.status(updateResponse.status).json({
-            success: updateResponse.ok,
-            ...updateData
-          });
-  
-        case 'DELETE': // Exclusão
-          if (userAcess !== 'Administrador') {
-            console.warn('[API] Acesso negado para exclusão');
-            return res.status(403).json({
-              success: false,
-              message: 'Acesso negado: Requer privilégios de administrador'
-            });
-          }
-  
-          // Verificar existência e permissão
-          console.log('[API] Verificando armazém para exclusão:', id);
-          const checkDeleteResponse = await fetch(`${baseUrl}/${id}`, { headers: parseHeaders });
-          const existingDeleteData = await checkDeleteResponse.json();
-          
-          if (!existingDeleteData.objectId || existingDeleteData.loja !== userLoja) {
-            console.error('[API] Armazém não encontrado para exclusão', {
-              objectId: existingDeleteData.objectId,
-              lojaArmazem: existingDeleteData.loja,
-              lojaUsuario: userLoja
-            });
-            return res.status(404).json({
-              success: false,
-              message: 'Armazém não encontrado ou não pertence à sua loja'
-            });
-          }
-  
-          console.log('[API] Excluindo armazém:', id);
-          const deleteResponse = await fetch(`${baseUrl}/${id}`, {
-            method: 'DELETE',
-            headers: parseHeaders
-          });
-  
-          console.log('[API] Resultado da exclusão:', deleteResponse.status);
-          return res.status(deleteResponse.status).json({
-            success: deleteResponse.ok,
-            message: deleteResponse.ok ? 'Armazém excluído com sucesso' : 'Falha ao excluir armazém'
-          });
-  
-        default:
-          console.error('[API] Método não permitido:', method);
-          res.setHeader('Allow', ['POST', 'PUT', 'DELETE']);
-          return res.status(405).json({
-            success: false,
-            message: `Método ${method} não permitido`
-          });
+        const response = await fetch(`https://parseapi.back4app.com/classes/Armazem?where=${encodeURIComponent(JSON.stringify(where))}`, {
+          headers: parseHeaders
+        });
+        const data = await response.json();
+        return res.status(response.status).json(data.results || []);
       }
+  
+      // Operação de Criação (POST com ID)
+      if (method === 'POST' && id) {
+        if (userAcess !== 'Administrador') {
+          return res.status(403).json({ success: false, message: 'Acesso negado' });
+        }
+  
+        const response = await fetch('https://parseapi.back4app.com/classes/Armazem', {
+          method: 'POST',
+          headers: parseHeaders,
+          body: JSON.stringify({
+            ...req.body,
+            loja: userLoja,
+            capacidadeOcupada: 0,
+            ACL: { [userLoja]: { read: true, write: true } }
+          })
+        });
+        const data = await response.json();
+        return res.status(response.status).json(data);
+      }
+  
+      // Operação de Atualização (PUT)
+      if (method === 'PUT') {
+        if (userAcess !== 'Administrador') {
+          return res.status(403).json({ success: false, message: 'Acesso negado' });
+        }
+  
+        const response = await fetch(`https://parseapi.back4app.com/classes/Armazem/${id}`, {
+          method: 'PUT',
+          headers: parseHeaders,
+          body: JSON.stringify(req.body)
+        });
+        const data = await response.json();
+        return res.status(response.status).json(data);
+      }
+  
+      // Operação de Exclusão (DELETE)
+      if (method === 'DELETE') {
+        if (userAcess !== 'Administrador') {
+          return res.status(403).json({ success: false, message: 'Acesso negado' });
+        }
+  
+        const response = await fetch(`https://parseapi.back4app.com/classes/Armazem/${id}`, {
+          method: 'DELETE',
+          headers: parseHeaders
+        });
+        return res.status(response.status).json({ success: response.ok });
+      }
+  
+      // Método não permitido
+      res.setHeader('Allow', ['POST', 'PUT', 'DELETE']);
+      return res.status(405).json({ success: false, message: 'Método não permitido' });
+  
     } catch (error) {
-      console.error('[API] Erro interno:', {
-        message: error.message,
-        stack: error.stack
-      });
-      return res.status(500).json({
-        success: false,
-        message: 'Erro interno no servidor',
-        ...(process.env.NODE_ENV === 'development' && {
-          error: error.message
-        })
+      console.error('Erro na API:', error);
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Erro interno',
+        ...(process.env.NODE_ENV === 'development' && { error: error.message })
       });
     }
   }
