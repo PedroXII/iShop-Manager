@@ -6,107 +6,158 @@ import { useRouter } from "next/router";
 
 export default function Armazem() {
   const router = useRouter();
-  const [filtros, setFiltros] = useState({
-    nome: '',
-    localizacao: '',
-    capacidadeMin: '',
-    capacidadeMax: ''
-  });
   const [armazens, setArmazens] = useState([]);
-  const [editando, setEditando] = useState(null);
-  const [novoArmazem, setNovoArmazem] = useState({
-    nome: '',
-    capacidadeTotal: '',
-    localizacao: {
-      pais: '',
-      estado: '',
-      cidade: '',
-      endereco: ''
-    }
-  });
-  const [error, setError] = useState('');
-  const [aviso, setAviso] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [userData, setUserData] = useState({ loja: '', acess: '' });
+  const [nome, setNome] = useState("");
+  const [capacidadeTotal, setCapacidadeTotal] = useState(0);
+  const [cep, setCep] = useState("");
+  const [pais, setPais] = useState("");
+  const [estado, setEstado] = useState("");
+  const [cidade, setCidade] = useState("");
+  const [rua, setRua] = useState("");
+  const [complemento, setComplemento] = useState("");
+  const [error, setError] = useState("");
+  const [editingArmazem, setEditingArmazem] = useState(null);
+  const [searchNome, setSearchNome] = useState("");
+  const [searchLocalizacao, setSearchLocalizacao] = useState("");
+  const [showResults, setShowResults] = useState(false);
+  const [loja, setLoja] = useState(null);
+  const [acess, setAcess] = useState("");
+  const [aviso, setAviso] = useState("");
 
+  // Carregar a loja e acesso do usuário logado
   useEffect(() => {
-    const loja = localStorage.getItem('loja');
-    const acess = localStorage.getItem('acess');
-    
-    if (!loja) {
-      router.push('/login');
-      return;
+    if (typeof window !== "undefined") {
+      const loja = localStorage.getItem("loja");
+      const acess = localStorage.getItem("acess");
+      setLoja(loja);
+      setAcess(acess);
     }
-    
-    setUserData({ loja, acess });
   }, []);
 
-  const handleApiCall = async (url, method, body) => {
-    setLoading(true);
-    setError('');
+  // Adicionar ou editar armazém
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!loja) {
+      setError("Loja não encontrada. Faça login novamente.");
+      return;
+    }
+
+    // Verificar campos recomendados
+    if (!nome || !capacidadeTotal) {
+      setAviso("Atenção: Nome e capacidade total são recomendados");
+    } else {
+      setAviso("");
+    }
+
+    const armazemData = {
+      nome,
+      capacidadeTotal: Number(capacidadeTotal),
+      capacidadeOcupada: 0,
+      CEP: cep,
+      pais,
+      estado,
+      cidade,
+      rua,
+      complemento,
+      loja,
+    };
+
     try {
+      const url = editingArmazem
+        ? `/api/armazem?objectId=${editingArmazem.objectId}`
+        : "/api/armazem";
+      const method = editingArmazem ? "PUT" : "POST";
+
       const response = await fetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json',
-          'X-User-Loja': userData.loja,
-          'X-User-Acess': userData.acess
+          "Content-Type": "application/json",
         },
-        body: body ? JSON.stringify(body) : undefined
+        body: JSON.stringify(armazemData),
       });
 
       const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || `Erro ${response.status}`);
-      }
-      return data;
-    } catch (error) {
-      setError(error.message);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const pesquisarArmazens = async () => {
-    const data = await handleApiCall('/api/armazem', 'POST', filtros);
-    if (data) setArmazens(data);
-  };
-
-  const salvarArmazem = async (e) => {
-    e.preventDefault();
-    setError('');
-    
-    if (!novoArmazem.nome || !novoArmazem.capacidadeTotal) {
-      setAviso('Atenção: Nome e capacidade total são recomendados');
-    } else {
-      setAviso('');
-    }
-
-    const url = editando ? `/api/armazem?id=${editando}` : '/api/armazem';
-    const method = editando ? 'PUT' : 'POST';
-    
-    const data = await handleApiCall(url, method, novoArmazem);
-    if (data) {
-      setNovoArmazem({ 
-        nome: '', 
-        capacidadeTotal: '',
-        localizacao: {
-          pais: '',
-          estado: '',
-          cidade: '',
-          endereco: ''
+      if (response.ok) {
+        // Atualizar a lista de armazéns
+        if (editingArmazem) {
+          setArmazens(
+            armazens.map((a) =>
+              a.objectId === editingArmazem.objectId ? data : a
+            )
+          );
+        } else {
+          setArmazens([...armazens, data]);
         }
-      });
-      setEditando(null);
-      pesquisarArmazens();
+        // Limpar o formulário
+        setNome("");
+        setCapacidadeTotal(0);
+        setCep("");
+        setPais("");
+        setEstado("");
+        setCidade("");
+        setRua("");
+        setComplemento("");
+        setEditingArmazem(null);
+      } else {
+        setError(data.message || "Erro ao salvar armazém.");
+      }
+    } catch (error) {
+      setError("Erro ao conectar com o servidor.");
     }
   };
 
-  const excluirArmazem = async (id) => {
-    if (window.confirm('Tem certeza que deseja excluir este armazém?')) {
-      const data = await handleApiCall(`/api/armazem?id=${id}`, 'DELETE');
-      if (data?.success) pesquisarArmazens();
+  // Excluir armazém
+  const handleDelete = async (objectId) => {
+    if (acess !== "Administrador") {
+      setError("Apenas administradores podem excluir armazéns.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/armazem?objectId=${objectId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setArmazens(armazens.filter((a) => a.objectId !== objectId));
+      } else {
+        const data = await response.json();
+        setError(data.message || "Erro ao excluir armazém.");
+      }
+    } catch (error) {
+      setError("Erro ao conectar com o servidor.");
+    }
+  };
+
+  // Preencher formulário para edição
+  const handleEdit = (armazem) => {
+    setNome(armazem.nome || "");
+    setCapacidadeTotal(armazem.capacidadeTotal || 0);
+    setCep(armazem.CEP || "");
+    setPais(armazem.pais || "");
+    setEstado(armazem.estado || "");
+    setCidade(armazem.cidade || "");
+    setRua(armazem.rua || "");
+    setComplemento(armazem.complemento || "");
+    setEditingArmazem(armazem);
+  };
+
+  // Pesquisar armazéns
+  const handleSearch = async () => {
+    try {
+      const response = await fetch(`/api/armazem?loja=${loja}&nome=${searchNome}&localizacao=${searchLocalizacao}`);
+      const data = await response.json();
+
+      if (response.ok) {
+        setArmazens(Array.isArray(data) ? data : []);
+        setShowResults(true);
+      } else {
+        setError(data.message || "Erro ao pesquisar armazéns.");
+      }
+    } catch (error) {
+      setError("Erro ao conectar com o servidor.");
     }
   };
 
@@ -115,14 +166,16 @@ export default function Armazem() {
       <Head>
         <title>iShop Manager: Armazém</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico"/>
+        <meta charSet="UTF-8" />
+        <link rel="icon" href="/favicon.ico" />
       </Head>
-      
       <div>
         <main>
-          {/* Navbar Completa */}
           <section>
-            <nav id="navbar" className="navbar bg-primary col-12 navbar-expand-lg position-fixed">
+            <nav
+              id="navbar"
+              className="navbar bg-primary col-12 navbar-expand-lg position-fixed"
+            >
               <div className="container-fluid col-11 m-auto">
                 <Link href="/home">
                   <Image
@@ -130,7 +183,6 @@ export default function Armazem() {
                     alt="LOGO"
                     width={40}
                     height={40}
-                    className="cursor-pointer"
                   />
                 </Link>
                 <button
@@ -147,28 +199,44 @@ export default function Armazem() {
                 <div className="collapse navbar-collapse" id="navbarNav">
                   <ul className="navbar-nav ms-auto">
                     <li className="nav-item">
-                      <Link href="/home" className="nav-link text-light">Home</Link>
+                      <Link href="/home">
+                        <a className="nav-link text-light">Home</a>
+                      </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/funcionario" className="nav-link text-light">Funcionário</Link>
+                      <Link href="/funcionario">
+                        <a className="nav-link text-light">Funcionário</a>
+                      </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/cliente" className="nav-link text-light">Cliente</Link>
+                      <Link href="/cliente">
+                        <a className="nav-link text-light">Cliente</a>
+                      </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="#top" className="nav-link text-light">Armazém</Link>
+                      <Link href="#top">
+                        <a className="nav-link text-light">Armazém</a>
+                      </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/promocao" className="nav-link text-light">Promoção</Link>
+                      <Link href="/promocao">
+                        <a className="nav-link text-light">Promoção</a>
+                      </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/produto" className="nav-link text-light">Produto</Link>
+                      <Link href="/produto">
+                        <a className="nav-link text-light">Produto</a>
+                      </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/loja_parceira" className="nav-link text-light">Parceiro</Link>
+                      <Link href="/loja_parceira">
+                        <a className="nav-link text-light">Parceiro</a>
+                      </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/index" className="nav-link text-light">Logout</Link>
+                      <Link href="/index">
+                        <a className="nav-link text-light">Logout</a>
+                      </Link>
                     </li>
                   </ul>
                 </div>
@@ -176,304 +244,205 @@ export default function Armazem() {
             </nav>
           </section>
 
-          <section id="top" className="d-flex flex-column min-vh-100" style={{ paddingTop: '80px' }}>
-            <div className="container">
-              {error && <div className="alert alert-danger">{error}</div>}
-              {aviso && <div className="alert alert-warning">{aviso}</div>}
+          <section id="top" className="d-flex flex-column min-vh-100">
+            <div className="container row m-auto">
+              <div className="col-md-8 mx-auto mt-5">
+                <h2 className="text-center mb-4">Armazéns</h2>
+                {error && <div className="alert alert-danger">{error}</div>}
+                {aviso && <div className="alert alert-warning">{aviso}</div>}
 
-              {/* Filtros de Pesquisa */}
-              <div className="card mb-4">
-                <div className="card-body">
-                  <h5 className="card-title">🔍 Pesquisar Armazéns</h5>
-                  <div className="row g-3">
-                    <div className="col-md-4">
+                {/* Formulário para adicionar/editar armazém */}
+                <form onSubmit={handleSubmit} className="mb-4">
+                  <div className="row">
+                    <div className="col-md-6 mb-3">
+                      <label htmlFor="nome" className="form-label">Nome</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="nome"
+                        placeholder="Nome do armazém"
+                        value={nome}
+                        onChange={(e) => setNome(e.target.value)}
+                      />
+                    </div>
+                    <div className="col-md-6 mb-3">
+                      <label htmlFor="capacidade" className="form-label">Capacidade Total (L)</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        id="capacidade"
+                        placeholder="Capacidade em litros"
+                        value={capacidadeTotal}
+                        onChange={(e) => setCapacidadeTotal(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="row">
+                    <div className="col-md-3 mb-3">
+                      <label htmlFor="cep" className="form-label">CEP</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="cep"
+                        placeholder="CEP"
+                        value={cep}
+                        onChange={(e) => setCep(e.target.value)}
+                      />
+                    </div>
+                    <div className="col-md-3 mb-3">
+                      <label htmlFor="pais" className="form-label">País</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="pais"
+                        placeholder="País"
+                        value={pais}
+                        onChange={(e) => setPais(e.target.value)}
+                      />
+                    </div>
+                    <div className="col-md-3 mb-3">
+                      <label htmlFor="estado" className="form-label">Estado</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="estado"
+                        placeholder="Estado"
+                        value={estado}
+                        onChange={(e) => setEstado(e.target.value)}
+                      />
+                    </div>
+                    <div className="col-md-3 mb-3">
+                      <label htmlFor="cidade" className="form-label">Cidade</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="cidade"
+                        placeholder="Cidade"
+                        value={cidade}
+                        onChange={(e) => setCidade(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="row">
+                    <div className="col-md-8 mb-3">
+                      <label htmlFor="rua" className="form-label">Rua</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="rua"
+                        placeholder="Rua"
+                        value={rua}
+                        onChange={(e) => setRua(e.target.value)}
+                      />
+                    </div>
+                    <div className="col-md-4 mb-3">
+                      <label htmlFor="complemento" className="form-label">Complemento</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="complemento"
+                        placeholder="Complemento"
+                        value={complemento}
+                        onChange={(e) => setComplemento(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  
+                  <button type="submit" className="btn btn-primary w-100">
+                    {editingArmazem ? "Atualizar Armazém" : "Adicionar Armazém"}
+                  </button>
+                </form>
+
+                {/* Área de pesquisa */}
+                <div className="mb-4">
+                  <h3>Pesquisar Armazéns</h3>
+                  <div className="row">
+                    <div className="col-md-6 mb-3">
                       <input
                         type="text"
                         className="form-control"
                         placeholder="Nome do armazém"
-                        value={filtros.nome}
-                        onChange={(e) => setFiltros({...filtros, nome: e.target.value})}
+                        value={searchNome}
+                        onChange={(e) => setSearchNome(e.target.value)}
                       />
                     </div>
-                    <div className="col-md-4">
+                    <div className="col-md-6 mb-3">
                       <input
                         type="text"
                         className="form-control"
                         placeholder="País, estado ou cidade"
-                        value={filtros.localizacao}
-                        onChange={(e) => setFiltros({...filtros, localizacao: e.target.value})}
+                        value={searchLocalizacao}
+                        onChange={(e) => setSearchLocalizacao(e.target.value)}
                       />
                     </div>
-                    <div className="col-md-4">
-                      <div className="input-group">
-                        <input
-                          type="number"
-                          className="form-control"
-                          placeholder="Mínima (L)"
-                          value={filtros.capacidadeMin}
-                          onChange={(e) => setFiltros({...filtros, capacidadeMin: e.target.value})}
-                        />
-                        <input
-                          type="number"
-                          className="form-control"
-                          placeholder="Máxima (L)"
-                          value={filtros.capacidadeMax}
-                          onChange={(e) => setFiltros({...filtros, capacidadeMax: e.target.value})}
-                        />
-                      </div>
-                    </div>
-                    <div className="col-12">
-                      <div className="d-flex gap-2">
-                        <button 
-                          className="btn btn-primary flex-grow-1"
-                          onClick={pesquisarArmazens}
-                          disabled={loading}
-                        >
-                          {loading ? 'Pesquisando...' : 'Pesquisar'}
-                        </button>
-                        <button 
-                          className="btn btn-outline-secondary"
-                          onClick={() => {
-                            setFiltros({
-                              nome: '',
-                              localizacao: '',
-                              capacidadeMin: '',
-                              capacidadeMax: ''
-                            });
-                          }}
-                        >
-                          Limpar
-                        </button>
-                      </div>
-                    </div>
                   </div>
-                </div>
-              </div>
-
-              {/* Formulário para Criar/Editar */}
-              <div className="card mb-4">
-                <div className="card-body">
-                  <h5 className="card-title">
-                    {editando ? '✏️ Editar Armazém' : '➕ Novo Armazém'}
-                  </h5>
-                  <form onSubmit={salvarArmazem}>
-                    <div className="row g-3 mb-3">
-                      <div className="col-md-6">
-                        <label className="form-label">Nome*</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Nome do armazém"
-                          value={novoArmazem.nome}
-                          onChange={(e) => setNovoArmazem({...novoArmazem, nome: e.target.value})}
-                          required
-                        />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label">Capacidade Total (L)*</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          placeholder="Em litros"
-                          min="0"
-                          value={novoArmazem.capacidadeTotal}
-                          onChange={(e) => setNovoArmazem({...novoArmazem, capacidadeTotal: e.target.value})}
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="row g-3 mb-3">
-                      <div className="col-md-3">
-                        <label className="form-label">País</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Ex: Brasil"
-                          value={novoArmazem.localizacao.pais}
-                          onChange={(e) => setNovoArmazem({
-                            ...novoArmazem,
-                            localizacao: {
-                              ...novoArmazem.localizacao,
-                              pais: e.target.value
-                            }
-                          })}
-                        />
-                      </div>
-                      <div className="col-md-3">
-                        <label className="form-label">Estado/Província</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Ex: São Paulo"
-                          value={novoArmazem.localizacao.estado}
-                          onChange={(e) => setNovoArmazem({
-                            ...novoArmazem,
-                            localizacao: {
-                              ...novoArmazem.localizacao,
-                              estado: e.target.value
-                            }
-                          })}
-                        />
-                      </div>
-                      <div className="col-md-3">
-                        <label className="form-label">Cidade</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Ex: Campinas"
-                          value={novoArmazem.localizacao.cidade}
-                          onChange={(e) => setNovoArmazem({
-                            ...novoArmazem,
-                            localizacao: {
-                              ...novoArmazem.localizacao,
-                              cidade: e.target.value
-                            }
-                          })}
-                        />
-                      </div>
-                      <div className="col-md-3">
-                        <label className="form-label">Endereço</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Rua, número"
-                          value={novoArmazem.localizacao.endereco}
-                          onChange={(e) => setNovoArmazem({
-                            ...novoArmazem,
-                            localizacao: {
-                              ...novoArmazem.localizacao,
-                              endereco: e.target.value
-                            }
-                          })}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="d-flex gap-2">
-                      <button 
-                        type="submit" 
-                        className="btn btn-success flex-grow-1"
-                        disabled={loading}
-                      >
-                        {loading ? 'Salvando...' : (editando ? 'Atualizar' : 'Cadastrar')}
-                      </button>
-                      {editando && (
-                        <button 
-                          type="button" 
-                          className="btn btn-outline-danger"
-                          onClick={() => {
-                            setEditando(null);
-                            setNovoArmazem({ 
-                              nome: '', 
-                              capacidadeTotal: '',
-                              localizacao: {
-                                pais: '',
-                                estado: '',
-                                cidade: '',
-                                endereco: ''
-                              }
-                            });
-                          }}
-                        >
-                          Cancelar
-                        </button>
-                      )}
-                    </div>
-                  </form>
-                </div>
-              </div>
-
-              {/* Listagem de Resultados */}
-              <div className="card">
-                <div className="card-body">
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h5 className="card-title mb-0">📦 Armazéns ({armazens.length})</h5>
-                    <button 
-                      className="btn btn-sm btn-outline-primary"
-                      onClick={pesquisarArmazens}
+                  <div className="d-flex">
+                    <button
+                      className="btn btn-secondary me-2"
+                      onClick={() => {
+                        setSearchNome("");
+                        setSearchLocalizacao("");
+                        setShowResults(false);
+                      }}
                     >
-                      Atualizar
+                      Limpar Filtros
+                    </button>
+                    <button
+                      className="btn btn-primary"
+                      onClick={handleSearch}
+                    >
+                      Pesquisar
                     </button>
                   </div>
-                  
-                  {armazens.length > 0 ? (
-                    <div className="table-responsive">
-                      <table className="table table-hover">
-                        <thead>
-                          <tr>
-                            <th>Nome</th>
-                            <th>Localização</th>
-                            <th>Capacidade</th>
-                            <th>Ações</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {armazens.map(armazem => (
-                            <tr key={armazem.objectId}>
-                              <td>{armazem.nome}</td>
-                              <td>
-                                {[
-                                  armazem.localizacao?.cidade,
-                                  armazem.localizacao?.estado,
-                                  armazem.localizacao?.pais
-                                ].filter(Boolean).join(', ')}
-                              </td>
-                              <td>
-                                <div className="progress" style={{ height: '20px' }}>
-                                  <div 
-                                    className="progress-bar bg-success" 
-                                    style={{ 
-                                      width: `${(armazem.capacidadeOcupada / armazem.capacidadeTotal) * 100}%`
-                                    }}
-                                  >
-                                    {armazem.capacidadeOcupada}/{armazem.capacidadeTotal}L
-                                  </div>
-                                </div>
-                              </td>
-                              <td>
-                                <div className="d-flex gap-2">
-                                  <button
-                                    className="btn btn-sm btn-outline-primary"
-                                    onClick={() => {
-                                      setEditando(armazem.objectId);
-                                      setNovoArmazem(armazem);
-                                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                                    }}
-                                  >
-                                    Editar
-                                  </button>
-                                  <button
-                                    className="btn btn-sm btn-outline-danger"
-                                    onClick={() => excluirArmazem(armazem.objectId)}
-                                  >
-                                    Excluir
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="text-center py-4">
-                      <div className="alert alert-info">
-                        {filtros.nome || filtros.localizacao 
-                          ? 'Nenhum armazém encontrado com esses filtros'
-                          : 'Realize uma pesquisa para visualizar os armazéns'}
-                      </div>
-                    </div>
-                  )}
                 </div>
+
+                {/* Lista de armazéns (só aparece após a pesquisa) */}
+                {showResults && (
+                  <div className="list-group">
+                    {armazens.length > 0 ? (
+                      armazens.map((armazem) => (
+                        <div
+                          key={armazem.objectId}
+                          className="list-group-item d-flex justify-content-between align-items-center"
+                        >
+                          <div>
+                            <h5>{armazem.nome}</h5>
+                            <p>Capacidade: {armazem.capacidadeOcupada}/{armazem.capacidadeTotal}L</p>
+                            <p>Localização: {armazem.cidade}, {armazem.estado}, {armazem.pais}</p>
+                            <p>Endereço: {armazem.rua}, {armazem.complemento} - CEP: {armazem.CEP}</p>
+                          </div>
+                          <div>
+                            <button
+                              className="btn btn-warning btn-sm me-2"
+                              onClick={() => handleEdit(armazem)}
+                            >
+                              Editar
+                            </button>
+                            <button
+                              className="btn btn-danger btn-sm"
+                              onClick={() => handleDelete(armazem.objectId)}
+                              disabled={acess !== "Administrador"}
+                            >
+                              Excluir
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="alert alert-info">
+                        Nenhum armazém encontrado com os filtros aplicados.
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </section>
 
-          <footer className="d-flex align-items-center justify-content-center py-3 bg-light border-top">
-            <p className="mb-0 text-muted">
-              &copy; {new Date().getFullYear()} iShop Manager. Todos os direitos reservados.
-            </p>
+          <footer className="d-flex align-items-center justify-content-center py-3" id="bottom">
+            <p className="mb-0">&copy;iShop Manager 2025. Todos os direitos reservados.</p>
           </footer>
         </main>
       </div>

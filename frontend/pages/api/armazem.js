@@ -1,117 +1,90 @@
 export default async function handler(req, res) {
-    // Configurações iniciais
-    const { method, headers, query } = req;
-    const { id } = query;
-    const userLoja = headers['x-user-loja'];
-    const userAcess = headers['x-user-acess'];
+    const { method, query, body } = req;
+    const { objectId } = query;
+    const loja = req.headers['x-user-loja'];
+    const acess = req.headers['x-user-acess'];
   
-    // Verificação de autenticação
-    if (!userLoja) {
-      return res.status(401).json({ success: false, message: 'Não autenticado' });
+    // Verificar autenticação
+    if (!loja) {
+      return res.status(401).json({ message: "Não autenticado" });
     }
   
-    // Verificação das credenciais do Back4App
-    if (!process.env.BACK4APP_APP_ID || !process.env.BACK4APP_JS_KEY) {
-      return res.status(500).json({ 
-        success: false, 
-        message: 'Configuração do servidor incompleta' 
-      });
-    }
-  
-    // Headers para o Back4App
-    const parseHeaders = {
-      'X-Parse-Application-Id': process.env.BACK4APP_APP_ID,
-      'X-Parse-JavaScript-Key': process.env.BACK4APP_JS_KEY,
-      'Content-Type': 'application/json'
+    // Configurações do Back4App
+    const headers = {
+      "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
+      "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
+      "Content-Type": "application/json",
     };
   
     try {
-      // Operação de Pesquisa (POST sem ID)
-      if (method === 'POST' && !id) {
-        let body;
-        try {
-          body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-        } catch {
-          return res.status(400).json({ success: false, message: 'Body inválido' });
+      // Operação de pesquisa (GET)
+      if (method === "GET") {
+        const { nome, localizacao } = query;
+        
+        let where = { loja };
+        if (nome) where.nome = { $regex: nome, $options: "i" };
+        if (localizacao) {
+          where.$or = [
+            { pais: { $regex: localizacao, $options: "i" } },
+            { estado: { $regex: localizacao, $options: "i" } },
+            { cidade: { $regex: localizacao, $options: "i" } },
+          ];
         }
-  
-        const where = {
-          loja: userLoja,
-          ...(body.filters?.nome && { nome: { $regex: body.filters.nome, $options: 'i' } }),
-          ...(body.filters?.localizacao && {
-            $or: [
-              { 'localizacao.pais': { $regex: body.filters.localizacao, $options: 'i' } },
-              { 'localizacao.estado': { $regex: body.filters.localizacao, $options: 'i' } },
-              { 'localizacao.cidade': { $regex: body.filters.localizacao, $options: 'i' } }
-            ]
-          })
-        };
   
         const response = await fetch(`https://parseapi.back4app.com/classes/Armazem?where=${encodeURIComponent(JSON.stringify(where))}`, {
-          headers: parseHeaders
+          headers,
         });
         const data = await response.json();
-        return res.status(response.status).json(data.results || []);
+        return res.status(200).json(data.results || []);
       }
   
-      // Operação de Criação (POST com ID)
-      if (method === 'POST' && id) {
-        if (userAcess !== 'Administrador') {
-          return res.status(403).json({ success: false, message: 'Acesso negado' });
-        }
-  
-        const response = await fetch('https://parseapi.back4app.com/classes/Armazem', {
-          method: 'POST',
-          headers: parseHeaders,
+      // Operação de criação (POST)
+      if (method === "POST") {
+        const response = await fetch("https://parseapi.back4app.com/classes/Armazem", {
+          method: "POST",
+          headers,
           body: JSON.stringify({
-            ...req.body,
-            loja: userLoja,
-            capacidadeOcupada: 0,
-            ACL: { [userLoja]: { read: true, write: true } }
-          })
+            ...body,
+            ACL: { [loja]: { read: true, write: true } }
+          }),
         });
         const data = await response.json();
-        return res.status(response.status).json(data);
+        return res.status(response.ok ? 200 : 400).json(data);
       }
   
-      // Operação de Atualização (PUT)
-      if (method === 'PUT') {
-        if (userAcess !== 'Administrador') {
-          return res.status(403).json({ success: false, message: 'Acesso negado' });
+      // Operação de atualização (PUT)
+      if (method === "PUT") {
+        if (acess !== "Administrador") {
+          return res.status(403).json({ message: "Apenas administradores podem atualizar armazéns" });
         }
   
-        const response = await fetch(`https://parseapi.back4app.com/classes/Armazem/${id}`, {
-          method: 'PUT',
-          headers: parseHeaders,
-          body: JSON.stringify(req.body)
+        const response = await fetch(`https://parseapi.back4app.com/classes/Armazem/${objectId}`, {
+          method: "PUT",
+          headers,
+          body: JSON.stringify(body),
         });
         const data = await response.json();
-        return res.status(response.status).json(data);
+        return res.status(response.ok ? 200 : 400).json(data);
       }
   
-      // Operação de Exclusão (DELETE)
-      if (method === 'DELETE') {
-        if (userAcess !== 'Administrador') {
-          return res.status(403).json({ success: false, message: 'Acesso negado' });
+      // Operação de exclusão (DELETE)
+      if (method === "DELETE") {
+        if (acess !== "Administrador") {
+          return res.status(403).json({ message: "Apenas administradores podem excluir armazéns" });
         }
   
-        const response = await fetch(`https://parseapi.back4app.com/classes/Armazem/${id}`, {
-          method: 'DELETE',
-          headers: parseHeaders
+        const response = await fetch(`https://parseapi.back4app.com/classes/Armazem/${objectId}`, {
+          method: "DELETE",
+          headers,
         });
-        return res.status(response.status).json({ success: response.ok });
+        return res.status(response.ok ? 200 : 400).json({ success: response.ok });
       }
   
       // Método não permitido
-      res.setHeader('Allow', ['POST', 'PUT', 'DELETE']);
-      return res.status(405).json({ success: false, message: 'Método não permitido' });
-  
+      res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
+      return res.status(405).json({ message: "Método não permitido" });
     } catch (error) {
-      console.error('Erro na API:', error);
-      return res.status(500).json({ 
-        success: false, 
-        message: 'Erro interno',
-        ...(process.env.NODE_ENV === 'development' && { error: error.message })
-      });
+      console.error("Erro na API de armazém:", error);
+      return res.status(500).json({ message: "Erro interno no servidor" });
     }
   }
