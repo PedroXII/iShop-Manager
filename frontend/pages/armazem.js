@@ -472,8 +472,8 @@ export default function Armazem() {
             </div>
           </section>
 
-          <footer className="d-flex align-items-center justify-content-center py-3 bg-light border-top">
-            <p className="mb-0 text-muted">
+          <footer className="d-flex align-items-center justify-content-center py-3 mt-4">
+            <p className="mb-0">
               &copy; {new Date().getFullYear()} iShop Manager. Todos os direitos reservados.
             </p>
           </footer>
