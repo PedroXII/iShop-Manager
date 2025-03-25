@@ -17,14 +17,13 @@ export default async function handler(req, res) {
     };
   
     try {
-      // Operação de pesquisa (POST)
-      if (method === "POST") {
+      // Operação de pesquisa (GET)
+      if (method === "POST" && !id) {
         let filters = {};
         try {
           filters = typeof body === 'string' ? JSON.parse(body).filters : body.filters || {};
         } catch (e) {
-          console.error("Erro ao parsear body:", e);
-          return res.status(400).json({ success: false, message: "Formato de dados inválido" });
+          return res.status(400).json({ success: false, message: "Formato de filtros inválido" });
         }
   
         const where = {
@@ -36,9 +35,7 @@ export default async function handler(req, res) {
               { 'localizacao.estado': { $regex: filters.localizacao, $options: "i" } },
               { 'localizacao.cidade': { $regex: filters.localizacao, $options: "i" } }
             ]
-          }),
-          ...(filters.capacidadeMin && { capacidadeTotal: { $gte: Number(filters.capacidadeMin) } }),
-          ...(filters.capacidadeMax && { capacidadeTotal: { $lte: Number(filters.capacidadeMax) } })
+          })
         };
   
         const response = await fetch(`https://parseapi.back4app.com/classes/Armazem?where=${encodeURIComponent(JSON.stringify(where))}`, {
@@ -47,6 +44,7 @@ export default async function handler(req, res) {
         
         if (!response.ok) {
           const errorData = await response.json();
+          console.error("Erro na resposta do Back4App:", errorData);
           throw new Error(errorData.error || "Erro ao buscar armazéns");
         }
   
@@ -54,28 +52,41 @@ export default async function handler(req, res) {
         return res.status(200).json(data.results || []);
       }
   
-      // Operação de criação (POST sem ID)
-      if (method === "POST") {
-        let armazemData;
+      // Operação de criação (POST)
+      if (method === "POST" && !id) {
+        let armazemData = {};
         try {
           armazemData = typeof body === 'string' ? JSON.parse(body) : body;
         } catch (e) {
           return res.status(400).json({ success: false, message: "Formato de dados inválido" });
         }
   
+        // Preparar dados para o Back4App
+        const payload = {
+          ...armazemData,
+          loja: userLoja,
+          capacidadeOcupada: 0,
+          ACL: {
+            [userLoja]: { read: true, write: true }
+          }
+        };
+  
+        console.log("Enviando para Back4App:", payload); // Log para debug
+  
         const response = await fetch('https://parseapi.back4app.com/classes/Armazem', {
           method: 'POST',
           headers: parseHeaders,
-          body: JSON.stringify({
-            ...armazemData,
-            loja: userLoja,
-            capacidadeOcupada: 0,
-            ACL: { [userLoja]: { read: true, write: true } }
-          })
+          body: JSON.stringify(payload)
         });
   
         const data = await response.json();
-        return res.status(response.ok ? 200 : 400).json(data);
+        
+        if (!response.ok) {
+          console.error("Erro na criação:", data);
+          throw new Error(data.error || "Erro ao criar armazém");
+        }
+  
+        return res.status(201).json(data);
       }
   
       // Operação de atualização (PUT)
@@ -84,12 +95,14 @@ export default async function handler(req, res) {
           return res.status(403).json({ success: false, message: "Apenas administradores podem atualizar armazéns" });
         }
   
-        let armazemData;
+        let armazemData = {};
         try {
           armazemData = typeof body === 'string' ? JSON.parse(body) : body;
         } catch (e) {
           return res.status(400).json({ success: false, message: "Formato de dados inválido" });
         }
+  
+        console.log("Atualizando no Back4App:", armazemData); // Log para debug
   
         const response = await fetch(`https://parseapi.back4app.com/classes/Armazem/${id}`, {
           method: 'PUT',
@@ -98,7 +111,13 @@ export default async function handler(req, res) {
         });
   
         const data = await response.json();
-        return res.status(response.ok ? 200 : 400).json(data);
+        
+        if (!response.ok) {
+          console.error("Erro na atualização:", data);
+          throw new Error(data.error || "Erro ao atualizar armazém");
+        }
+  
+        return res.status(200).json(data);
       }
   
       // Operação de exclusão (DELETE)
@@ -111,7 +130,14 @@ export default async function handler(req, res) {
           method: 'DELETE',
           headers: parseHeaders
         });
-        return res.status(response.ok ? 200 : 400).json({ success: response.ok });
+  
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Erro na exclusão:", errorData);
+          throw new Error(errorData.error || "Erro ao excluir armazém");
+        }
+  
+        return res.status(200).json({ success: true });
       }
   
       // Método não permitido
@@ -121,8 +147,7 @@ export default async function handler(req, res) {
       console.error("Erro na API de armazém:", error);
       return res.status(500).json({ 
         success: false, 
-        message: "Erro interno no servidor",
-        ...(process.env.NODE_ENV === 'development' && { error: error.message })
+        message: error.message || "Erro interno no servidor"
       });
     }
   }

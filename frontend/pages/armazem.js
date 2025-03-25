@@ -45,6 +45,8 @@ export default function Armazem() {
     setLoading(true);
     setError('');
     try {
+      console.log(`Enviando requisição ${method} para ${url}`, body);
+      
       const response = await fetch(url, {
         method,
         headers: {
@@ -55,13 +57,17 @@ export default function Armazem() {
         body: body ? JSON.stringify(body) : undefined
       });
 
+      const data = await response.json();
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Erro ${response.status}`);
+        console.error("Erro na resposta da API:", data);
+        throw new Error(data.message || `Erro ${response.status}`);
       }
 
-      return await response.json();
+      console.log("Resposta da API:", data);
+      return data;
     } catch (error) {
+      console.error("Erro na chamada API:", error);
       setError(error.message);
       return null;
     } finally {
@@ -70,8 +76,12 @@ export default function Armazem() {
   };
 
   const pesquisarArmazens = async () => {
+    console.log("Iniciando pesquisa com filtros:", filtros);
     const data = await handleApiCall('/api/armazem', 'POST', { filters: filtros });
-    if (data) setArmazens(data);
+    if (data) {
+      console.log("Armazéns encontrados:", data);
+      setArmazens(data);
+    }
   };
 
   const salvarArmazem = async (e) => {
@@ -84,15 +94,27 @@ export default function Armazem() {
       setAviso('');
     }
 
+    const armazemData = {
+      nome: novoArmazem.nome,
+      capacidadeTotal: Number(novoArmazem.capacidadeTotal),
+      localizacao: {
+        pais: novoArmazem.localizacao.pais,
+        estado: novoArmazem.localizacao.estado,
+        cidade: novoArmazem.localizacao.cidade,
+        endereco: novoArmazem.localizacao.endereco
+      },
+      loja: userData.loja
+    };
+
+    console.log("Preparando para salvar armazém:", armazemData);
+
     const url = editando ? `/api/armazem?id=${editando}` : '/api/armazem';
     const method = editando ? 'PUT' : 'POST';
     
-    const data = await handleApiCall(url, method, {
-      ...novoArmazem,
-      loja: userData.loja
-    });
+    const data = await handleApiCall(url, method, armazemData);
     
     if (data) {
+      console.log("Armazém salvo com sucesso:", data);
       setNovoArmazem({ 
         nome: '', 
         capacidadeTotal: '',
@@ -111,7 +133,10 @@ export default function Armazem() {
   const excluirArmazem = async (id) => {
     if (window.confirm('Tem certeza que deseja excluir este armazém?')) {
       const data = await handleApiCall(`/api/armazem?id=${id}`, 'DELETE');
-      if (data?.success) pesquisarArmazens();
+      if (data?.success) {
+        console.log("Armazém excluído com sucesso");
+        pesquisarArmazens();
+      }
     }
   };
 
@@ -414,11 +439,8 @@ export default function Armazem() {
                             <tr key={armazem.objectId}>
                               <td>{armazem.nome}</td>
                               <td>
-                                {[
-                                  armazem.localizacao?.cidade,
-                                  armazem.localizacao?.estado,
-                                  armazem.localizacao?.pais
-                                ].filter(Boolean).join(', ')}
+                                {[armazem.localizacao?.cidade, armazem.localizacao?.estado, armazem.localizacao?.pais]
+                                  .filter(Boolean).join(', ')}
                               </td>
                               <td>
                                 <div className="progress" style={{ height: '20px' }}>
@@ -438,7 +460,16 @@ export default function Armazem() {
                                     className="btn btn-sm btn-outline-primary"
                                     onClick={() => {
                                       setEditando(armazem.objectId);
-                                      setNovoArmazem(armazem);
+                                      setNovoArmazem({
+                                        nome: armazem.nome,
+                                        capacidadeTotal: armazem.capacidadeTotal,
+                                        localizacao: {
+                                          pais: armazem.localizacao?.pais || '',
+                                          estado: armazem.localizacao?.estado || '',
+                                          cidade: armazem.localizacao?.cidade || '',
+                                          endereco: armazem.localizacao?.endereco || ''
+                                        }
+                                      });
                                       window.scrollTo({ top: 0, behavior: 'smooth' });
                                     }}
                                   >

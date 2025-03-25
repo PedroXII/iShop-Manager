@@ -402,8 +402,10 @@ export default function Client() {
             </div>
           </section>
 
-          <footer className="d-flex align-items-center justify-content-center py-3" id="bottom">
-            <p className="mb-0">&copy;iShop Manager 2025. Todos os direitos reservados.</p>
+          <footer className="d-flex align-items-center justify-content-center py-3 mt-4">
+            <p className="mb-0">
+              &copy; {new Date().getFullYear()} iShop Manager. Todos os direitos reservados.
+            </p>
           </footer>
         </main>
       </div>
