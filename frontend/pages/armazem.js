@@ -42,8 +42,6 @@ export default function Armazem() {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'X-Parse-Application-Id': process.env.NEXT_PUBLIC_BACK4APP_APP_ID,
-          'X-Parse-JavaScript-Key': process.env.NEXT_PUBLIC_BACK4APP_JS_KEY,
           'X-User-Loja': loja,
           'X-User-Acess': acess
         },
@@ -72,28 +70,15 @@ export default function Armazem() {
       return;
     }
 
-    const where = {
-      loja,
-      ...(filtros.nome && { nome: { $regex: filtros.nome, $options: 'i' } }),
-      ...(filtros.localizacao && {
-        $or: [
-          { pais: { $regex: filtros.localizacao, $options: 'i' } },
-          { estado: { $regex: filtros.localizacao, $options: 'i' } },
-          { cidade: { $regex: filtros.localizacao, $options: 'i' } },
-          { rua: { $regex: filtros.localizacao, $options: 'i' } }
-        ]
-      }),
-      ...(filtros.capacidadeMin && { capacidadeTotal: { $gte: Number(filtros.capacidadeMin) } }),
-      ...(filtros.capacidadeMax && { capacidadeTotal: { ...(filtros.capacidadeMin ? { $gte: Number(filtros.capacidadeMin) } : {}), $lte: Number(filtros.capacidadeMax) } })
-    };
-
-    const data = await handleApiCall(
-      `https://parseapi.back4app.com/classes/Armazem?where=${encodeURIComponent(JSON.stringify(where))}`,
-      'GET'
-    );
+    const data = await handleApiCall('/api/armazem', 'POST', { 
+      filters: {
+        ...filtros,
+        loja
+      } 
+    });
     
-    if (data && data.results) {
-      setArmazens(data.results);
+    if (data) {
+      setArmazens(data);
     }
   };
 
@@ -120,14 +105,10 @@ export default function Armazem() {
       estado: novoArmazem.estado,
       cidade: novoArmazem.cidade,
       rua: novoArmazem.rua,
-      loja,
-      ACL: { [loja]: { read: true, write: true } }
+      loja
     };
 
-    const url = editando 
-      ? `https://parseapi.back4app.com/classes/Armazem/${editando}`
-      : 'https://parseapi.back4app.com/classes/Armazem';
-    
+    const url = editando ? `/api/armazem?id=${editando}` : '/api/armazem';
     const method = editando ? 'PUT' : 'POST';
     
     const data = await handleApiCall(url, method, armazemData);
@@ -149,11 +130,8 @@ export default function Armazem() {
 
   const excluirArmazem = async (id) => {
     if (window.confirm('Tem certeza que deseja excluir este armazém?')) {
-      const data = await handleApiCall(
-        `https://parseapi.back4app.com/classes/Armazem/${id}`,
-        'DELETE'
-      );
-      if (data) {
+      const data = await handleApiCall(`/api/armazem?id=${id}`, 'DELETE');
+      if (data?.success) {
         pesquisarArmazens();
       }
     }
