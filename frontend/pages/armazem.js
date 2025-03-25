@@ -68,6 +68,8 @@ export default function Armazem() {
     // Verificação de campos recomendados
     if (!novoArmazem.nome || !novoArmazem.capacidadeTotal) {
       setAviso('Campos recomendados: nome e capacidade total');
+    } else {
+      setAviso('');
     }
 
     const url = editando ? `/api/armazem?id=${editando}` : '/api/armazem';
@@ -107,10 +109,74 @@ export default function Armazem() {
       
       <div>
         <main>
-          {/* Navbar igual às outras páginas */}
+          {/* Navbar Completa */}
           <section>
             <nav id="navbar" className="navbar bg-primary col-12 navbar-expand-lg position-fixed">
-              {/* ... mesma navbar das outras páginas ... */}
+              <div className="container-fluid col-11 m-auto">
+                <Link href="/home">
+                  <Image
+                    src="/Varios-12-150ppp-01.jpg"
+                    alt="LOGO"
+                    width={40}
+                    height={40}
+                  />
+                </Link>
+                <button
+                  className="navbar-toggler"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#navbarNav"
+                  aria-controls="navbarNav"
+                  aria-expanded="false"
+                  aria-label="Toggle navigation"
+                >
+                  <span className="navbar-toggler-icon"></span>
+                </button>
+                <div className="collapse navbar-collapse" id="navbarNav">
+                  <ul className="navbar-nav ms-auto">
+                    <li className="nav-item">
+                      <Link href="/home">
+                        <a className="nav-link text-light">Home</a>
+                      </Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link href="/funcionario">
+                        <a className="nav-link text-light">Funcionário</a>
+                      </Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link href="/cliente">
+                        <a className="nav-link text-light">Cliente</a>
+                      </Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link href="#top">
+                        <a className="nav-link text-light">Armazém</a>
+                      </Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link href="/promocao">
+                        <a className="nav-link text-light">Promoção</a>
+                      </Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link href="/produto">
+                        <a className="nav-link text-light">Produto</a>
+                      </Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link href="/loja_parceira">
+                        <a className="nav-link text-light">Parceiro</a>
+                      </Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link href="/index">
+                        <a className="nav-link text-light">Logout</a>
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+              </div>
             </nav>
           </section>
 
@@ -205,7 +271,7 @@ export default function Armazem() {
                         />
                       </div>
                       <div className="col-md-6">
-                        <label className="form-label">Capacidade Total (L)*</label>
+                        <label className="form-label">Capacidade Total (em litros)*</label>
                         <input
                           type="number"
                           className="form-control"

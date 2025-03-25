@@ -1,4 +1,3 @@
-// pages/api/armazem.js
 export default async function handler(req, res) {
     const { method, headers, body, query } = req;
     const { id } = query;
