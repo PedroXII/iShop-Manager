@@ -69,15 +69,14 @@ export default function Armazem() {
       setError('Loja não identificada');
       return;
     }
-
-    // Construir query string manualmente
+  
+    // Construir query string apenas com os filtros de pesquisa
     const params = new URLSearchParams();
     if (filtros.nome) params.append('nome', filtros.nome);
     if (filtros.localizacao) params.append('localizacao', filtros.localizacao);
     if (filtros.capacidadeMin) params.append('capacidadeMin', filtros.capacidadeMin);
     if (filtros.capacidadeMax) params.append('capacidadeMax', filtros.capacidadeMax);
-    params.append('loja', loja);
-
+  
     const data = await handleApiCall(`/api/armazem?${params.toString()}`, 'GET');
     
     if (data) {
