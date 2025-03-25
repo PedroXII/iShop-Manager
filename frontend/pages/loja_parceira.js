@@ -20,7 +20,7 @@ export default function LojaParceira() {
               className="navbar bg-primary col-12 navbar-expand-lg position-fixed"
             >
               <div className="container-fluid col-11 m-auto">
-                <Link href="/index">
+                <Link href="/home">
                   <Image
                     src="/Varios-12-150ppp-01.jpg"
                     alt="LOGO"
@@ -41,6 +41,11 @@ export default function LojaParceira() {
                 </button>
                 <div className="collapse navbar-collapse" id="navbarNav">
                   <ul className="navbar-nav ms-auto">
+                  <li className="nav-item">
+                      <Link href="/home">
+                        <a className="nav-link text-light">Home</a>
+                      </Link>
+                    </li>
                     <li className="nav-item">
                       <Link href="/funcionario">
                         <a className="nav-link text-light">Funcionário</a>
@@ -69,6 +74,11 @@ export default function LojaParceira() {
                     <li className="nav-item">
                       <Link href="#top">
                         <a className="nav-link text-light">Parceiro</a>
+                      </Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link href="/index">
+                        <a className="nav-link text-light">Logout</a>
                       </Link>
                     </li>
                   </ul>
