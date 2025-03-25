@@ -14,13 +14,13 @@ export default function Produto() {
       </Head>
       <div>
         <main>
-          <section>
+        <section>
             <nav
             id="navbar"
               className="navbar bg-primary col-12 navbar-expand-lg position-fixed"
             >
               <div className="container-fluid col-11 m-auto">
-                <Link href="/index">
+                <Link href="/home">
                   <Image
                     src="/Varios-12-150ppp-01.jpg"
                     alt="LOGO"
@@ -41,6 +41,11 @@ export default function Produto() {
                 </button>
                 <div className="collapse navbar-collapse" id="navbarNav">
                   <ul className="navbar-nav ms-auto">
+                  <li className="nav-item">
+                      <Link href="/home">
+                        <a className="nav-link text-light">Home</a>
+                      </Link>
+                    </li>
                     <li className="nav-item">
                       <Link href="/funcionario">
                         <a className="nav-link text-light">Funcionário</a>
@@ -71,6 +76,11 @@ export default function Produto() {
                         <a className="nav-link text-light">Parceiro</a>
                       </Link>
                     </li>
+                    <li className="nav-item">
+                      <Link href="/index">
+                        <a className="nav-link text-light">Logout</a>
+                      </Link>
+                    </li>
                   </ul>
                 </div>
               </div>
@@ -83,11 +93,8 @@ export default function Produto() {
             </div>
           </section>
 
-          <footer
-            className="d-flex align-items-center justify-content-center py-2"
-            id="bottom"
-          >
-            <p>&copy;iShop Manager 2025. Todos os direitos reservados.</p>
+          <footer className="d-flex align-items-center justify-content-center py-3" id="bottom">
+            <p className="mb-0">&copy;iShop Manager 2025. Todos os direitos reservados.</p>
           </footer>
         </main>
       </div>

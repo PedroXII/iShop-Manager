@@ -83,11 +83,8 @@ export default function Armazem() {
             </div>
           </section>
 
-          <footer
-            className="d-flex align-items-center justify-content-center py-2"
-            id="bottom"
-          >
-            <p>&copy;iShop Manager 2025. Todos os direitos reservados.</p>
+          <footer className="d-flex align-items-center justify-content-center py-3" id="bottom">
+            <p className="mb-0">&copy;iShop Manager 2025. Todos os direitos reservados.</p>
           </footer>
         </main>
       </div>
