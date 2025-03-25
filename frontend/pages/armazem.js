@@ -154,18 +154,265 @@ export default function Armazem() {
       
       <div>
         <main>
-          {/* Navbar e seção inicial permanecem iguais */}
-          {/* ... */}
+          <section>
+            <nav id="navbar" className="navbar bg-primary col-12 navbar-expand-lg position-fixed">
+              <div className="container-fluid col-11 m-auto">
+                <Link href="/home">
+                  <Image
+                    src="/Varios-12-150ppp-01.jpg"
+                    alt="LOGO"
+                    width={40}
+                    height={40}
+                    className="cursor-pointer"
+                  />
+                </Link>
+                <button
+                  className="navbar-toggler"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#navbarNav"
+                  aria-controls="navbarNav"
+                  aria-expanded="false"
+                  aria-label="Toggle navigation"
+                >
+                  <span className="navbar-toggler-icon"></span>
+                </button>
+                <div className="collapse navbar-collapse" id="navbarNav">
+                  <ul className="navbar-nav ms-auto">
+                    <li className="nav-item">
+                      <Link href="/home" className="nav-link text-light">Home</Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link href="/funcionario" className="nav-link text-light">Funcionário</Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link href="/cliente" className="nav-link text-light">Cliente</Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link href="#top" className="nav-link text-light">Armazém</Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link href="/promocao" className="nav-link text-light">Promoção</Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link href="/produto" className="nav-link text-light">Produto</Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link href="/loja_parceira" className="nav-link text-light">Parceiro</Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link href="/index" className="nav-link text-light">Logout</Link>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </nav>
+          </section>
 
           <section id="top" className="d-flex flex-column min-vh-100" style={{ paddingTop: '80px' }}>
             <div className="container">
               {error && <div className="alert alert-danger">{error}</div>}
               {aviso && <div className="alert alert-warning">{aviso}</div>}
 
-              {/* Formulário de pesquisa e cadastro permanecem iguais */}
-              {/* ... */}
+              <div className="card mb-4">
+                <div className="card-body">
+                  <h5 className="card-title">🔍 Pesquisar Armazéns</h5>
+                  <div className="row g-3">
+                    <div className="col-md-4">
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Nome do armazém"
+                        value={filtros.nome}
+                        onChange={(e) => setFiltros({...filtros, nome: e.target.value})}
+                      />
+                    </div>
+                    <div className="col-md-4">
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="País, estado ou cidade"
+                        value={filtros.localizacao}
+                        onChange={(e) => setFiltros({...filtros, localizacao: e.target.value})}
+                      />
+                    </div>
+                    <div className="col-md-4">
+                      <div className="input-group">
+                        <input
+                          type="number"
+                          className="form-control"
+                          placeholder="Mínima (L)"
+                          value={filtros.capacidadeMin}
+                          onChange={(e) => setFiltros({...filtros, capacidadeMin: e.target.value})}
+                        />
+                        <input
+                          type="number"
+                          className="form-control"
+                          placeholder="Máxima (L)"
+                          value={filtros.capacidadeMax}
+                          onChange={(e) => setFiltros({...filtros, capacidadeMax: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                    <div className="col-12">
+                      <div className="d-flex gap-2">
+                        <button 
+                          className="btn btn-primary flex-grow-1"
+                          onClick={pesquisarArmazens}
+                          disabled={loading}
+                        >
+                          {loading ? 'Pesquisando...' : 'Pesquisar'}
+                        </button>
+                        <button 
+                          className="btn btn-outline-secondary"
+                          onClick={() => {
+                            setFiltros({
+                              nome: '',
+                              localizacao: '',
+                              capacidadeMin: '',
+                              capacidadeMax: ''
+                            });
+                          }}
+                        >
+                          Limpar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-              {/* Tabela de armazéns */}
+              <div className="card mb-4">
+                <div className="card-body">
+                  <h5 className="card-title">
+                    {editando ? '✏️ Editar Armazém' : '➕ Novo Armazém'}
+                  </h5>
+                  <form onSubmit={salvarArmazem}>
+                    <div className="row g-3 mb-3">
+                      <div className="col-md-6">
+                        <label className="form-label">Nome*</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Nome do armazém"
+                          value={novoArmazem.nome}
+                          onChange={(e) => setNovoArmazem({...novoArmazem, nome: e.target.value})}
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label">Capacidade Total (L)*</label>
+                        <input
+                          type="number"
+                          className="form-control"
+                          placeholder="Em litros"
+                          min="0"
+                          value={novoArmazem.capacidadeTotal}
+                          onChange={(e) => setNovoArmazem({...novoArmazem, capacidadeTotal: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="row g-3 mb-3">
+                      <div className="col-md-3">
+                        <label className="form-label">País</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Ex: Brasil"
+                          value={novoArmazem.localizacao.pais}
+                          onChange={(e) => setNovoArmazem({
+                            ...novoArmazem,
+                            localizacao: {
+                              ...novoArmazem.localizacao,
+                              pais: e.target.value
+                            }
+                          })}
+                        />
+                      </div>
+                      <div className="col-md-3">
+                        <label className="form-label">Estado/Província</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Ex: São Paulo"
+                          value={novoArmazem.localizacao.estado}
+                          onChange={(e) => setNovoArmazem({
+                            ...novoArmazem,
+                            localizacao: {
+                              ...novoArmazem.localizacao,
+                              estado: e.target.value
+                            }
+                          })}
+                        />
+                      </div>
+                      <div className="col-md-3">
+                        <label className="form-label">Cidade</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Ex: Campinas"
+                          value={novoArmazem.localizacao.cidade}
+                          onChange={(e) => setNovoArmazem({
+                            ...novoArmazem,
+                            localizacao: {
+                              ...novoArmazem.localizacao,
+                              cidade: e.target.value
+                            }
+                          })}
+                        />
+                      </div>
+                      <div className="col-md-3">
+                        <label className="form-label">Endereço</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Rua, número"
+                          value={novoArmazem.localizacao.endereco}
+                          onChange={(e) => setNovoArmazem({
+                            ...novoArmazem,
+                            localizacao: {
+                              ...novoArmazem.localizacao,
+                              endereco: e.target.value
+                            }
+                          })}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="d-flex gap-2">
+                      <button 
+                        type="submit" 
+                        className="btn btn-success flex-grow-1"
+                        disabled={loading}
+                      >
+                        {loading ? 'Salvando...' : (editando ? 'Atualizar' : 'Cadastrar')}
+                      </button>
+                      {editando && (
+                        <button 
+                          type="button" 
+                          className="btn btn-outline-danger"
+                          onClick={() => {
+                            setEditando(null);
+                            setNovoArmazem({ 
+                              nome: '', 
+                              capacidadeTotal: '',
+                              localizacao: {
+                                pais: '',
+                                estado: '',
+                                cidade: '',
+                                endereco: ''
+                              }
+                            });
+                          }}
+                        >
+                          Cancelar
+                        </button>
+                      )}
+                    </div>
+                  </form>
+                </div>
+              </div>
+
               <div className="card">
                 <div className="card-body">
                   <div className="d-flex justify-content-between align-items-center mb-3">
