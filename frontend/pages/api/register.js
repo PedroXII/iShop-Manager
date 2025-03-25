@@ -47,7 +47,7 @@ export default async function handler(req, res) {
       }
 
       lojaId = lojaData.objectId;
-    } else if (acess === "Administrador" && acao === "lojaExistente") {
+    } else {
       if (!superiorUsername || !superiorPassword || !lojaExistente) {
         console.error("Erro: Credenciais do superior ausentes");
         return res.status(400).json({ message: "Credenciais do superior e loja são obrigatórias" });
@@ -72,6 +72,29 @@ export default async function handler(req, res) {
 
       const loginData = await loginResponse.json();
       console.log("Dados do superior:", loginData);
+
+      const userResponse = await fetch(`https://parseapi.back4app.com/users/${loginData.objectId}?include=loja`, {
+        headers: {
+          "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
+          "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY
+        }
+      });
+
+      const userData = await userResponse.json();
+      console.log("Dados completos do superior:", userData);
+
+      if (!userData.loja || !userData.loja.objectId) {
+        console.error("Erro: Superior sem loja associada");
+        return res.status(403).json({ message: "O superior não está associado a nenhuma loja" });
+      }
+
+      if (userData.loja.objectId !== lojaExistente) {
+        console.error("Erro: Superior pertence a uma loja diferente", {
+          lojaSuperior: userData.loja.objectId,
+          lojaSelecionada: lojaExistente
+        });
+        return res.status(403).json({ message: "O superior não pode criar usuários ou administradores para outra loja" });
+      }
 
       lojaId = lojaExistente;
     }
