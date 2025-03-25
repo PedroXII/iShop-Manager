@@ -39,6 +39,8 @@ export default function Armazem() {
     }
     
     setUserData({ loja, acess });
+    // Pesquisa inicial vazia para carregar armazéns da loja
+    pesquisarArmazens();
   }, [router]);
 
   const handleApiCall = async (url, method, body) => {
@@ -95,12 +97,11 @@ export default function Armazem() {
     const armazemData = {
       nome: novoArmazem.nome,
       capacidadeTotal: Number(novoArmazem.capacidadeTotal),
-      localizacao: {
-        pais: novoArmazem.localizacao.pais,
-        estado: novoArmazem.localizacao.estado,
-        cidade: novoArmazem.localizacao.cidade,
-        endereco: novoArmazem.localizacao.endereco
-      },
+      pais: novoArmazem.localizacao.pais,
+      estado: novoArmazem.localizacao.estado,
+      cidade: novoArmazem.localizacao.cidade,
+      rua: novoArmazem.localizacao.endereco,
+      complemento: '',
       loja: userData.loja
     };
 
@@ -431,8 +432,7 @@ export default function Armazem() {
                             <tr key={armazem.objectId}>
                               <td>{armazem.nome}</td>
                               <td>
-                                {[armazem.localizacao?.cidade, armazem.localizacao?.estado, armazem.localizacao?.pais]
-                                  .filter(Boolean).join(', ')}
+                                {[armazem.cidade, armazem.estado, armazem.pais].filter(Boolean).join(', ')}
                               </td>
                               <td>
                                 <div className="progress" style={{ height: '20px' }}>
@@ -456,10 +456,10 @@ export default function Armazem() {
                                         nome: armazem.nome,
                                         capacidadeTotal: armazem.capacidadeTotal,
                                         localizacao: {
-                                          pais: armazem.localizacao?.pais || '',
-                                          estado: armazem.localizacao?.estado || '',
-                                          cidade: armazem.localizacao?.cidade || '',
-                                          endereco: armazem.localizacao?.endereco || ''
+                                          pais: armazem.pais || '',
+                                          estado: armazem.estado || '',
+                                          cidade: armazem.cidade || '',
+                                          endereco: armazem.rua || ''
                                         }
                                       });
                                       window.scrollTo({ top: 0, behavior: 'smooth' });

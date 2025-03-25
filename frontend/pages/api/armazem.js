@@ -27,13 +27,16 @@ export default async function handler(req, res) {
         };
   
         if (nome) where.nome = { $regex: nome, $options: 'i' };
+        
         if (localizacao) {
           where.$or = [
-            { 'localizacao.pais': { $regex: localizacao, $options: 'i' } },
-            { 'localizacao.estado': { $regex: localizacao, $options: 'i' } },
-            { 'localizacao.cidade': { $regex: localizacao, $options: 'i' } }
+            { pais: { $regex: localizacao, $options: 'i' } },
+            { estado: { $regex: localizacao, $options: 'i' } },
+            { cidade: { $regex: localizacao, $options: 'i' } },
+            { rua: { $regex: localizacao, $options: 'i' } }
           ];
         }
+        
         if (capacidadeMin) where.capacidadeTotal = { $gte: Number(capacidadeMin) };
         if (capacidadeMax) {
           where.capacidadeTotal = where.capacidadeTotal || {};
@@ -62,12 +65,11 @@ export default async function handler(req, res) {
           nome,
           capacidadeTotal: Number(capacidadeTotal) || 0,
           capacidadeOcupada: 0,
-          localizacao: {
-            pais: localizacao?.pais || "",
-            estado: localizacao?.estado || "",
-            cidade: localizacao?.cidade || "",
-            endereco: localizacao?.endereco || ""
-          },
+          pais: localizacao?.pais || "",
+          estado: localizacao?.estado || "",
+          cidade: localizacao?.cidade || "",
+          rua: localizacao?.endereco || "",
+          complemento: "",
           loja: userLoja,
           ACL: { [userLoja]: { read: true, write: true } }
         });
@@ -96,7 +98,7 @@ export default async function handler(req, res) {
           throw new Error("O campo 'objectId' é obrigatório para edição.");
         }
   
-        // Primeiro verifica se o armazém pertence à loja do usuário
+        // Verificar se o armazém pertence à loja do usuário
         const checkResponse = await fetch(`${BASE_URL}/${objectId}`, {
           method: "GET",
           headers,
@@ -115,12 +117,11 @@ export default async function handler(req, res) {
         const body = JSON.stringify({
           nome,
           capacidadeTotal: Number(capacidadeTotal),
-          localizacao: {
-            pais: localizacao?.pais || existingArmazem.localizacao?.pais || "",
-            estado: localizacao?.estado || existingArmazem.localizacao?.estado || "",
-            cidade: localizacao?.cidade || existingArmazem.localizacao?.cidade || "",
-            endereco: localizacao?.endereco || existingArmazem.localizacao?.endereco || ""
-          }
+          pais: localizacao?.pais || existingArmazem.pais || "",
+          estado: localizacao?.estado || existingArmazem.estado || "",
+          cidade: localizacao?.cidade || existingArmazem.cidade || "",
+          rua: localizacao?.endereco || existingArmazem.rua || "",
+          complemento: existingArmazem.complemento || ""
         });
   
         const updateResponse = await fetch(`${BASE_URL}/${objectId}`, {
@@ -150,7 +151,7 @@ export default async function handler(req, res) {
           throw new Error("Apenas administradores podem excluir armazéns.");
         }
   
-        // Primeiro verifica se o armazém pertence à loja do usuário
+        // Verificar se o armazém pertence à loja do usuário
         const checkResponse = await fetch(`${BASE_URL}/${objectId}`, {
           method: "GET",
           headers,
