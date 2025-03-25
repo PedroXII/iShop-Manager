@@ -10,37 +10,44 @@ export default async function handler(req, res) {
     };
   
     try {
-      const userLoja = req.headers['x-user-loja'];
+      // Verifica os headers e o body para encontrar a loja
+      const userLoja = req.headers['x-user-loja'] || req.body?.loja || req.body?.filters?.loja;
       const userAcess = req.headers['x-user-acess'];
   
-      if (!userLoja) {
-        throw new Error("Acesso não autorizado: loja não identificada");
-      }
+      console.log("Loja identificada:", userLoja); // Para depuração
   
       // Listar Armazéns com filtros (POST)
       if (req.method === "POST") {
-        const { filters } = req.body;
-        const { nome, localizacao, capacidadeMin, capacidadeMax } = filters || {};
+        const { filters } = req.body || {};
         
-        let where = {
-          loja: userLoja
-        };
-  
-        if (nome) where.nome = { $regex: nome, $options: 'i' };
-        
-        if (localizacao) {
-          where.$or = [
-            { pais: { $regex: localizacao, $options: 'i' } },
-            { estado: { $regex: localizacao, $options: 'i' } },
-            { cidade: { $regex: localizacao, $options: 'i' } },
-            { rua: { $regex: localizacao, $options: 'i' } }
-          ];
+        if (!userLoja) {
+          return res.status(400).json({
+            success: false,
+            message: "Loja não identificada para filtro"
+          });
         }
-        
-        if (capacidadeMin) where.capacidadeTotal = { $gte: Number(capacidadeMin) };
-        if (capacidadeMax) {
-          where.capacidadeTotal = where.capacidadeTotal || {};
-          where.capacidadeTotal.$lte = Number(capacidadeMax);
+  
+        let where = { loja: userLoja };
+  
+        if (filters) {
+          const { nome, localizacao, capacidadeMin, capacidadeMax } = filters;
+          
+          if (nome) where.nome = { $regex: nome, $options: 'i' };
+          
+          if (localizacao) {
+            where.$or = [
+              { pais: { $regex: localizacao, $options: 'i' } },
+              { estado: { $regex: localizacao, $options: 'i' } },
+              { cidade: { $regex: localizacao, $options: 'i' } },
+              { rua: { $regex: localizacao, $options: 'i' } }
+            ];
+          }
+          
+          if (capacidadeMin) where.capacidadeTotal = { $gte: Number(capacidadeMin) };
+          if (capacidadeMax) {
+            where.capacidadeTotal = where.capacidadeTotal || {};
+            where.capacidadeTotal.$lte = Number(capacidadeMax);
+          }
         }
   
         const response = await fetch(`${BASE_URL}?where=${encodeURIComponent(JSON.stringify(where))}`, {
@@ -54,30 +61,37 @@ export default async function handler(req, res) {
         }
   
         const data = await response.json();
-        res.status(200).json(data.results);
+        return res.status(200).json(data.results);
       }
   
       // Adicionar Armazém (POST)
       else if (req.method === "POST") {
-        const { nome, capacidadeTotal, localizacao } = req.body;
+        const { nome, capacidadeTotal, pais, estado, cidade, rua, complemento, loja } = req.body;
   
-        const body = JSON.stringify({
+        if (!loja && !userLoja) {
+          return res.status(400).json({
+            success: false,
+            message: "Loja não identificada"
+          });
+        }
+  
+        const armazemData = {
           nome,
           capacidadeTotal: Number(capacidadeTotal) || 0,
           capacidadeOcupada: 0,
-          pais: localizacao?.pais || "",
-          estado: localizacao?.estado || "",
-          cidade: localizacao?.cidade || "",
-          rua: localizacao?.endereco || "",
-          complemento: "",
-          loja: userLoja,
-          ACL: { [userLoja]: { read: true, write: true } }
-        });
+          pais: pais || "",
+          estado: estado || "",
+          cidade: cidade || "",
+          rua: rua || "",
+          complemento: complemento || "",
+          loja: loja || userLoja,
+          ACL: { [loja || userLoja]: { read: true, write: true } }
+        };
   
         const response = await fetch(BASE_URL, {
           method: "POST",
           headers,
-          body,
+          body: JSON.stringify(armazemData),
         });
   
         if (!response.ok) {
@@ -86,19 +100,22 @@ export default async function handler(req, res) {
         }
   
         const data = await response.json();
-        res.status(201).json(data);
+        return res.status(201).json(data);
       }
   
       // Editar Armazém (PUT)
       else if (req.method === "PUT") {
         const { objectId } = req.query;
-        const { nome, capacidadeTotal, localizacao } = req.body;
+        const { nome, capacidadeTotal, pais, estado, cidade, rua } = req.body;
   
         if (!objectId) {
-          throw new Error("O campo 'objectId' é obrigatório para edição.");
+          return res.status(400).json({
+            success: false,
+            message: "ID do armazém não fornecido"
+          });
         }
   
-        // Verificar se o armazém pertence à loja do usuário
+        // Verifica se o armazém existe e pertence à loja do usuário
         const checkResponse = await fetch(`${BASE_URL}/${objectId}`, {
           method: "GET",
           headers,
@@ -110,24 +127,27 @@ export default async function handler(req, res) {
         }
   
         const existingArmazem = await checkResponse.json();
+        
         if (existingArmazem.loja !== userLoja) {
-          throw new Error("Acesso não autorizado: este armazém pertence a outra loja.");
+          return res.status(403).json({
+            success: false,
+            message: "Você não tem permissão para editar este armazém"
+          });
         }
   
-        const body = JSON.stringify({
+        const updateData = {
           nome,
           capacidadeTotal: Number(capacidadeTotal),
-          pais: localizacao?.pais || existingArmazem.pais || "",
-          estado: localizacao?.estado || existingArmazem.estado || "",
-          cidade: localizacao?.cidade || existingArmazem.cidade || "",
-          rua: localizacao?.endereco || existingArmazem.rua || "",
-          complemento: existingArmazem.complemento || ""
-        });
+          pais: pais || existingArmazem.pais,
+          estado: estado || existingArmazem.estado,
+          cidade: cidade || existingArmazem.cidade,
+          rua: rua || existingArmazem.rua
+        };
   
         const updateResponse = await fetch(`${BASE_URL}/${objectId}`, {
           method: "PUT",
           headers,
-          body,
+          body: JSON.stringify(updateData),
         });
   
         if (!updateResponse.ok) {
@@ -136,7 +156,7 @@ export default async function handler(req, res) {
         }
   
         const data = await updateResponse.json();
-        res.status(200).json(data);
+        return res.status(200).json(data);
       }
   
       // Excluir Armazém (DELETE)
@@ -144,14 +164,20 @@ export default async function handler(req, res) {
         const { objectId } = req.query;
   
         if (!objectId) {
-          throw new Error("O campo 'objectId' é obrigatório para exclusão.");
+          return res.status(400).json({
+            success: false,
+            message: "ID do armazém não fornecido"
+          });
         }
   
         if (userAcess !== "Administrador") {
-          throw new Error("Apenas administradores podem excluir armazéns.");
+          return res.status(403).json({
+            success: false,
+            message: "Apenas administradores podem excluir armazéns"
+          });
         }
   
-        // Verificar se o armazém pertence à loja do usuário
+        // Verifica se o armazém existe e pertence à loja do usuário
         const checkResponse = await fetch(`${BASE_URL}/${objectId}`, {
           method: "GET",
           headers,
@@ -163,8 +189,12 @@ export default async function handler(req, res) {
         }
   
         const existingArmazem = await checkResponse.json();
+        
         if (existingArmazem.loja !== userLoja) {
-          throw new Error("Acesso não autorizado: este armazém pertence a outra loja.");
+          return res.status(403).json({
+            success: false,
+            message: "Você não tem permissão para excluir este armazém"
+          });
         }
   
         const deleteResponse = await fetch(`${BASE_URL}/${objectId}`, {
@@ -177,19 +207,25 @@ export default async function handler(req, res) {
           throw new Error(errorData.message || "Erro ao excluir armazém.");
         }
   
-        res.status(200).json({ success: true, message: "Armazém excluído com sucesso." });
+        return res.status(200).json({ 
+          success: true, 
+          message: "Armazém excluído com sucesso" 
+        });
       }
   
       // Método não suportado
       else {
         res.setHeader("Allow", ["POST", "PUT", "DELETE"]);
-        res.status(405).json({ message: "Método não permitido." });
+        return res.status(405).json({ 
+          success: false,
+          message: "Método não permitido" 
+        });
       }
     } catch (error) {
       console.error("Erro na API de armazéns:", error.message);
-      res.status(500).json({ 
+      return res.status(500).json({ 
         success: false,
-        message: error.message || "Erro interno no servidor." 
+        message: error.message || "Erro interno no servidor" 
       });
     }
   }
