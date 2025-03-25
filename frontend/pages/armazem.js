@@ -157,7 +157,7 @@ export default function Armazem() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      {/* Navbar Padrão */}
+      {/* Navbar */}
       <nav className="navbar bg-primary navbar-expand-lg fixed-top">
         <div className="container-fluid">
           <Link href="/home" className="navbar-brand">
@@ -173,14 +173,34 @@ export default function Armazem() {
               <li className="nav-item">
                 <Link href="/home" className="nav-link text-light">Home</Link>
               </li>
-              {/* Outros links da navbar... */}
+              <li className="nav-item">
+                <Link href="/funcionario" className="nav-link text-light">Funcionários</Link>
+              </li>
+              <li className="nav-item">
+                <Link href="/cliente" className="nav-link text-light">Clientes</Link>
+              </li>
+              <li className="nav-item">
+                <Link href="#" className="nav-link text-light active">Armazéns</Link>
+              </li>
+              <li className="nav-item">
+                <Link href="/promocao" className="nav-link text-light">Promoções</Link>
+              </li>
+              <li className="nav-item">
+                <Link href="/produto" className="nav-link text-light">Produtos</Link>
+              </li>
+              <li className="nav-item">
+                <Link href="/loja_parceira" className="nav-link text-light">Parceiros</Link>
+              </li>
+              <li className="nav-item">
+                <Link href="/index" className="nav-link text-light">Sair</Link>
+              </li>
             </ul>
           </div>
         </div>
       </nav>
 
       <main className="container mt-5 pt-4">
-        {/* Formulário de Cadastro/Edição */}
+        {/* Formulário */}
         <div className="card shadow mb-4">
           <div className="card-body">
             <h2 className="card-title">
@@ -210,7 +230,46 @@ export default function Armazem() {
                     required
                   />
                 </div>
-                {/* Outros campos do formulário... */}
+                <div className="col-md-4">
+                  <label className="form-label">País</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Brasil"
+                    value={formData.pais}
+                    onChange={(e) => setFormData({...formData, pais: e.target.value})}
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label">Estado</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="São Paulo"
+                    value={formData.estado}
+                    onChange={(e) => setFormData({...formData, estado: e.target.value})}
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label">Cidade</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Campinas"
+                    value={formData.cidade}
+                    onChange={(e) => setFormData({...formData, cidade: e.target.value})}
+                  />
+                </div>
+                <div className="col-12">
+                  <label className="form-label">Endereço</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Rua, número"
+                    value={formData.rua}
+                    onChange={(e) => setFormData({...formData, rua: e.target.value})}
+                  />
+                </div>
               </div>
               <button 
                 type="submit" 
@@ -251,11 +310,11 @@ export default function Armazem() {
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Nome ou parte do nome"
+                  placeholder="Nome do armazém"
                   value={filtros.nome}
                   onChange={(e) => setFiltros({...filtros, nome: e.target.value})}
                 />
-                <small className="text-muted">Ex: "arm" para "Armazém 1"</small>
+                <small className="text-muted">Ex: Digite &quot;arm&quot; para &quot;Armazém 1&quot;</small>
               </div>
               <div className="col-md-4">
                 <input
@@ -265,9 +324,26 @@ export default function Armazem() {
                   value={filtros.localizacao}
                   onChange={(e) => setFiltros({...filtros, localizacao: e.target.value})}
                 />
-                <small className="text-muted">Ex: "São Paulo" ou "Brasil"</small>
+                <small className="text-muted">Ex: &quot;São Paulo&quot; ou &quot;Brasil&quot;</small>
               </div>
-              {/* Filtros de capacidade... */}
+              <div className="col-md-2">
+                <input
+                  type="number"
+                  className="form-control"
+                  placeholder="Cap. Mínima"
+                  value={filtros.capacidadeMin}
+                  onChange={(e) => setFiltros({...filtros, capacidadeMin: e.target.value})}
+                />
+              </div>
+              <div className="col-md-2">
+                <input
+                  type="number"
+                  className="form-control"
+                  placeholder="Cap. Máxima"
+                  value={filtros.capacidadeMax}
+                  onChange={(e) => setFiltros({...filtros, capacidadeMax: e.target.value})}
+                />
+              </div>
               <div className="col-12">
                 <button
                   className="btn btn-primary me-2"
@@ -295,7 +371,7 @@ export default function Armazem() {
           </div>
         </div>
 
-        {/* Resultados da Pesquisa */}
+        {/* Resultados */}
         {showResults && (
           <div className="card shadow">
             <div className="card-body">
@@ -304,8 +380,8 @@ export default function Armazem() {
                   📦 Resultados ({armazens.length})
                 </h2>
                 <small className="text-muted">
-                  {filtros.nome && `Nome: "${filtros.nome}"`}
-                  {filtros.localizacao && ` | Local: "${filtros.localizacao}"`}
+                  {filtros.nome && `Filtro: &quot;${filtros.nome}&quot;`}
+                  {filtros.localizacao && ` em &quot;${filtros.localizacao}&quot;`}
                 </small>
               </div>
 
@@ -315,13 +391,13 @@ export default function Armazem() {
                     <div key={armazem.objectId} className="list-group-item">
                       <div className="d-flex justify-content-between align-items-center">
                         <div>
-                          <h5>{armazem.nome}</h5>
-                          <p className="mb-1 text-muted">
+                          <h5 className="text-primary">{armazem.nome}</h5>
+                          <p className="text-muted mb-2">
                             {[armazem.cidade, armazem.estado, armazem.pais].filter(Boolean).join(' • ')}
                           </p>
-                          <div className="progress mt-2" style={{ height: '20px' }}>
-                            <div
-                              className="progress-bar bg-success"
+                          <div className="progress" style={{height: '20px'}}>
+                            <div 
+                              className="progress-bar bg-success" 
                               style={{
                                 width: `${(armazem.capacidadeOcupada / armazem.capacidadeTotal) * 100}%`
                               }}
@@ -330,9 +406,9 @@ export default function Armazem() {
                             </div>
                           </div>
                         </div>
-                        <div>
+                        <div className="d-flex gap-2">
                           <button
-                            className="btn btn-sm btn-outline-primary me-2"
+                            className="btn btn-sm btn-outline-primary"
                             onClick={() => iniciarEdicao(armazem)}
                           >
                             Editar
@@ -359,7 +435,7 @@ export default function Armazem() {
         )}
       </main>
 
-      {/* Footer Padrão */}
+      {/* Footer */}
       <footer className="bg-light py-3 mt-4">
         <div className="container text-center">
           <p className="mb-0">
