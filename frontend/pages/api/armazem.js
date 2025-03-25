@@ -1,11 +1,11 @@
 export default async function handler(req, res) {
     const { method, query, body } = req;
-    const { objectId } = query;
-    const loja = req.headers['x-user-loja'];
-    const acess = req.headers['x-user-acess'];
+    const { id } = query;
+    const userLoja = req.headers['x-user-loja'];
+    const userAcess = req.headers['x-user-acess'];
   
     // Verificar autenticação
-    if (!loja) {
+    if (!userLoja) {
       return res.status(401).json({ message: "Não autenticado" });
     }
   
@@ -17,71 +17,83 @@ export default async function handler(req, res) {
     };
   
     try {
-      // Operação de pesquisa (GET)
-      if (method === "GET") {
-        const { nome, localizacao } = query;
-        
-        let where = { loja };
-        if (nome) where.nome = { $regex: nome, $options: "i" };
-        if (localizacao) {
-          where.$or = [
-            { pais: { $regex: localizacao, $options: "i" } },
-            { estado: { $regex: localizacao, $options: "i" } },
-            { cidade: { $regex: localizacao, $options: "i" } },
-          ];
+      // Operação de pesquisa (POST)
+      if (method === "POST") {
+        let filters = {};
+        try {
+          filters = typeof body === 'string' ? JSON.parse(body).filters : body.filters;
+        } catch (e) {
+          return res.status(400).json({ message: "Formato de filtros inválido" });
         }
+  
+        const where = {
+          loja: userLoja,
+          ...(filters.nome && { nome: { $regex: filters.nome, $options: "i" } }),
+          ...(filters.localizacao && {
+            $or: [
+              { 'localizacao.pais': { $regex: filters.localizacao, $options: "i" } },
+              { 'localizacao.estado': { $regex: filters.localizacao, $options: "i" } },
+              { 'localizacao.cidade': { $regex: filters.localizacao, $options: "i" } }
+            ]
+          }),
+          ...(filters.capacidadeMin && { capacidadeTotal: { $gte: Number(filters.capacidadeMin) } }),
+          ...(filters.capacidadeMax && { capacidadeTotal: { $lte: Number(filters.capacidadeMax) } })
+        };
   
         const response = await fetch(`https://parseapi.back4app.com/classes/Armazem?where=${encodeURIComponent(JSON.stringify(where))}`, {
           headers,
         });
+        
         const data = await response.json();
-        return res.status(200).json(data.results || []);
+        return res.status(response.status).json(data.results || []);
       }
   
-      // Operação de criação (POST)
-      if (method === "POST") {
-        const response = await fetch("https://parseapi.back4app.com/classes/Armazem", {
-          method: "POST",
+      // Operação de criação (POST com ID)
+      if (method === "POST" && id) {
+        const response = await fetch('https://parseapi.back4app.com/classes/Armazem', {
+          method: 'POST',
           headers,
           body: JSON.stringify({
             ...body,
-            ACL: { [loja]: { read: true, write: true } }
-          }),
+            loja: userLoja,
+            capacidadeOcupada: 0,
+            ACL: { [userLoja]: { read: true, write: true } }
+          })
         });
         const data = await response.json();
-        return res.status(response.ok ? 200 : 400).json(data);
+        return res.status(response.status).json(data);
       }
   
       // Operação de atualização (PUT)
       if (method === "PUT") {
-        if (acess !== "Administrador") {
+        if (userAcess !== "Administrador") {
           return res.status(403).json({ message: "Apenas administradores podem atualizar armazéns" });
         }
   
-        const response = await fetch(`https://parseapi.back4app.com/classes/Armazem/${objectId}`, {
-          method: "PUT",
+        const response = await fetch(`https://parseapi.back4app.com/classes/Armazem/${id}`, {
+          method: 'PUT',
           headers,
-          body: JSON.stringify(body),
+          body: JSON.stringify(body)
         });
         const data = await response.json();
-        return res.status(response.ok ? 200 : 400).json(data);
+        return res.status(response.status).json(data);
       }
   
       // Operação de exclusão (DELETE)
       if (method === "DELETE") {
-        if (acess !== "Administrador") {
+        if (userAcess !== "Administrador") {
           return res.status(403).json({ message: "Apenas administradores podem excluir armazéns" });
         }
   
-        const response = await fetch(`https://parseapi.back4app.com/classes/Armazem/${objectId}`, {
-          method: "DELETE",
-          headers,
+        const response = await fetch(`https://parseapi.back4app.com/classes/Armazem/${id}`, {
+          method: 'DELETE',
+          headers
         });
-        return res.status(response.ok ? 200 : 400).json({ success: response.ok });
+        return res.status(response.status).json({ success: response.ok });
       }
   
       // Método não permitido
-      res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
+      res.setHeader("Allow", ["POST", "PUT", "DELETE"]);
       return res.status(405).json({ message: "Método não permitido" });
     } catch (error) {
       console.error("Erro na API de armazém:", error);
