@@ -20,7 +20,7 @@ export default async function handler(req, res) {
         });
       }
   
-      // GET - List Armazéns with Filters
+      // GET - Listar Armazéns com Filtros
       if (req.method === "GET") {
         const { nome, localizacao, capacidadeMin, capacidadeMax } = req.query;
         
@@ -49,7 +49,7 @@ export default async function handler(req, res) {
         return res.status(200).json(data.results || []);
       }
   
-      // POST - Create New Armazém
+      // POST - Criar Novo Armazém
       else if (req.method === "POST") {
         const { nome, capacidadeTotal } = req.body;
         
@@ -78,7 +78,7 @@ export default async function handler(req, res) {
         return res.status(201).json(data);
       }
   
-      // PUT - Update Existing Armazém
+      // PUT - Atualizar Armazém Existente
       else if (req.method === "PUT") {
         const { objectId } = req.query;
         const { nome, capacidadeTotal } = req.body;
@@ -112,7 +112,7 @@ export default async function handler(req, res) {
         return res.status(200).json(data);
       }
   
-      // DELETE - Remove Armazém
+      // DELETE - Remover Armazém
       else if (req.method === "DELETE") {
         const { objectId } = req.query;
   
@@ -146,7 +146,7 @@ export default async function handler(req, res) {
         });
       }
   
-      // Unsupported Method
+      // Método Não Suportado
       else {
         res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);
         return res.status(405).json({ 
