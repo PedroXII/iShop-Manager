@@ -70,12 +70,12 @@ export default function Armazem() {
       return;
     }
 
-    const data = await handleApiCall('/api/armazem', 'POST', { 
-      filters: {
-        ...filtros,
-        loja
-      } 
+    const params = new URLSearchParams({
+      ...filtros,
+      loja
     });
+
+    const data = await handleApiCall(`/api/armazem?${params.toString()}`, 'GET');
     
     if (data) {
       setArmazens(data);
@@ -98,13 +98,9 @@ export default function Armazem() {
     }
 
     const armazemData = {
-      nome: novoArmazem.nome,
+      ...novoArmazem,
       capacidadeTotal: Number(novoArmazem.capacidadeTotal),
       capacidadeOcupada: 0,
-      pais: novoArmazem.pais,
-      estado: novoArmazem.estado,
-      cidade: novoArmazem.cidade,
-      rua: novoArmazem.rua,
       loja
     };
 
@@ -141,8 +137,6 @@ export default function Armazem() {
     const loja = localStorage.getItem('loja');
     if (!loja) {
       router.push('/login');
-    } else {
-      pesquisarArmazens();
     }
   }, [router]);
 
