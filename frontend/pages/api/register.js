@@ -7,28 +7,37 @@ export default async function handler(req, res) {
     });
   }
 
-  const { username, password, acess, idade, superiorUsername, superiorPassword, nomeLoja, lojaExistente, acao } = req.body;
+  const { username, password, acess, idade, nomeLoja, lojaExistente, superiorUsername, superiorPassword, acao } = req.body;
 
-  console.log("Iniciando processo de registro para:", username);
+  console.log("Dados recebidos:", { 
+    username, 
+    acess,
+    acao,
+    lojaExistente,
+    nomeLoja 
+  });
 
   // Validações básicas
   if (!username || !password || !acess || !idade) {
     return res.status(400).json({
       success: false,
-      message: "Dados incompletos",
-      requiredFields: ["username", "password", "acess", "idade"]
+      message: "Campos obrigatórios faltando",
+      required: ["username", "password", "acess", "idade"]
     });
   }
 
   if (password.length < 6) {
     return res.status(400).json({
       success: false,
-      message: "Senha deve conter no mínimo 6 caracteres"
+      message: "Senha deve ter no mínimo 6 caracteres"
     });
   }
 
   try {
-    // FLUXO 1: ADMINISTRADOR COM NOVA LOJA
+    let lojaId = null;
+    let userId = null;
+
+    // FLUXO 1: ADMINISTRADOR CRIANDO NOVA LOJA
     if (acess === "Administrador" && acao === "novaLoja") {
       if (!nomeLoja) {
         return res.status(400).json({
@@ -37,9 +46,7 @@ export default async function handler(req, res) {
         });
       }
 
-      console.log(`Criando nova loja '${nomeLoja}' para admin '${username}'`);
-
-      // 1. Criar loja com status temporário
+      // 1. Criar a loja primeiro (sem administrador ainda)
       const lojaResponse = await fetch("https://parseapi.back4app.com/classes/Loja", {
         method: "POST",
         headers: {
@@ -49,26 +56,26 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           nome: nomeLoja,
-          status: "pending_admin_creation",
-          primeiroAdministrador: null // Inicialmente nulo
+          status: "ativa",
+          primeiroAdministrador: null // Será preenchido depois
         })
       });
 
       const lojaData = await lojaResponse.json();
 
       if (!lojaResponse.ok) {
-        console.error("Falha ao criar loja:", lojaData);
+        console.error("Erro ao criar loja:", lojaData);
         return res.status(400).json({
           success: false,
-          message: "Falha ao criar nova loja",
+          message: "Erro ao criar loja",
           error: lojaData.error || "Erro desconhecido"
         });
       }
 
-      const lojaId = lojaData.objectId;
-      console.log(`Loja criada temporariamente com ID: ${lojaId}`);
+      lojaId = lojaData.objectId;
+      console.log("Loja criada temporariamente com ID:", lojaId);
 
-      // 2. Criar usuário admin associado à loja
+      // 2. Criar usuário administrador
       const userResponse = await fetch("https://parseapi.back4app.com/users", {
         method: "POST",
         headers: {
@@ -81,19 +88,15 @@ export default async function handler(req, res) {
           password,
           acess,
           idade: Number(idade),
-          loja: {
-            __type: "Pointer",
-            className: "Loja",
-            objectId: lojaId
-          }
+          loja: lojaId // Armazenamos apenas o ID como string
         })
       });
 
       const userData = await userResponse.json();
 
       if (!userResponse.ok) {
-        console.error("Falha ao criar admin:", userData);
-        // Rollback: remover loja criada
+        console.error("Erro ao criar usuário:", userData);
+        // Rollback: apagar a loja criada
         await fetch(`https://parseapi.back4app.com/classes/Loja/${lojaId}`, {
           method: "DELETE",
           headers: {
@@ -104,15 +107,15 @@ export default async function handler(req, res) {
         
         return res.status(400).json({
           success: false,
-          message: "Falha ao criar usuário administrador",
+          message: "Erro ao criar usuário administrador",
           error: userData.error || "Erro desconhecido"
         });
       }
 
-      const userId = userData.objectId;
-      console.log(`Admin criado com ID: ${userId}`);
+      userId = userData.objectId;
+      console.log("Administrador criado com ID:", userId);
 
-      // 3. Atualizar loja com primeiroAdministrador
+      // 3. Atualizar loja com o primeiroAdministrador
       const updateLojaResponse = await fetch(`https://parseapi.back4app.com/classes/Loja/${lojaId}`, {
         method: "PUT",
         headers: {
@@ -121,134 +124,111 @@ export default async function handler(req, res) {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          primeiroAdministrador: {
-            __type: "Pointer",
-            className: "_User",
-            objectId: userId
-          },
-          status: "active"
+          primeiroAdministrador: userId // Armazenamos apenas o ID como string
         })
       });
 
       if (!updateLojaResponse.ok) {
-        console.error("Falha ao atualizar loja com admin:", await updateLojaResponse.json());
+        console.error("Erro ao atualizar loja:", await updateLojaResponse.json());
         // Não fazemos rollback aqui para evitar perda de dados
       }
-
-      return res.status(201).json({
-        success: true,
-        message: "Administrador e loja criados com sucesso",
-        data: {
-          userId,
-          lojaId
-        }
-      });
     }
-
     // FLUXO 2: USUÁRIO/ADMIN EM LOJA EXISTENTE
-    if (!superiorUsername || !superiorPassword || !lojaExistente) {
-      return res.status(400).json({
-        success: false,
-        message: "Credenciais de administrador e loja são obrigatórias"
-      });
-    }
-
-    console.log(`Verificando superior ${superiorUsername} para loja ${lojaExistente}`);
-
-    // 1. Autenticar superior
-    const loginResponse = await fetch("https://parseapi.back4app.com/login", {
-      method: "POST",
-      headers: {
-        "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
-        "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        username: superiorUsername,
-        password: superiorPassword
-      })
-    });
-
-    if (!loginResponse.ok) {
-      const errorData = await loginResponse.json();
-      return res.status(401).json({
-        success: false,
-        message: "Falha na autenticação do superior",
-        error: errorData.error || "Credenciais inválidas"
-      });
-    }
-
-    const superiorData = await loginResponse.json();
-
-    // 2. Verificar se é administrador
-    if (superiorData.acess !== "Administrador") {
-      return res.status(403).json({
-        success: false,
-        message: "Apenas administradores podem registrar novos usuários"
-      });
-    }
-
-    // 3. Verificar associação com a loja
-    const userQuery = await fetch(`https://parseapi.back4app.com/users/${superiorData.objectId}?keys=loja`, {
-      headers: {
-        "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
-        "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY
+    else {
+      if (!superiorUsername || !superiorPassword || !lojaExistente) {
+        return res.status(400).json({
+          success: false,
+          message: "Credenciais do superior e ID da loja são obrigatórias"
+        });
       }
-    });
 
-    const userData = await userQuery.json();
-
-    if (!userQuery.ok || !userData.loja || userData.loja.objectId !== lojaExistente) {
-      return res.status(403).json({
-        success: false,
-        message: "O superior não tem permissão para esta loja",
-        detail: {
-          lojaEsperada: lojaExistente,
-          lojaDoSuperior: userData.loja?.objectId || "não encontrada"
-        }
+      // 1. Verificar superior
+      const loginResponse = await fetch("https://parseapi.back4app.com/login", {
+        method: "POST",
+        headers: {
+          "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
+          "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          username: superiorUsername,
+          password: superiorPassword
+        })
       });
-    }
 
-    // 4. Criar novo usuário
-    const newUserResponse = await fetch("https://parseapi.back4app.com/users", {
-      method: "POST",
-      headers: {
-        "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
-        "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        username,
-        password,
-        acess,
-        idade: Number(idade),
-        loja: {
-          __type: "Pointer",
-          className: "Loja",
-          objectId: lojaExistente
-        }
-      })
-    });
+      if (!loginResponse.ok) {
+        const errorData = await loginResponse.json();
+        return res.status(401).json({
+          success: false,
+          message: "Falha na autenticação do superior",
+          error: errorData.error || "Credenciais inválidas"
+        });
+      }
 
-    const newUserData = await newUserResponse.json();
+      const superiorData = await loginResponse.json();
 
-    if (!newUserResponse.ok) {
-      return res.status(400).json({
-        success: false,
-        message: "Falha ao criar usuário",
-        error: newUserData.error || "Erro desconhecido"
+      // 2. Verificar se é administrador
+      if (superiorData.acess !== "Administrador") {
+        return res.status(403).json({
+          success: false,
+          message: "Apenas administradores podem registrar novos usuários"
+        });
+      }
+
+      // 3. Verificar se o superior pertence à loja informada
+      if (superiorData.loja !== lojaExistente) {
+        return res.status(403).json({
+          success: false,
+          message: "O superior não tem permissão para esta loja",
+          detail: {
+            lojaSuperior: superiorData.loja,
+            lojaSolicitada: lojaExistente
+          }
+        });
+      }
+
+      // 4. Criar novo usuário
+      const userResponse = await fetch("https://parseapi.back4app.com/users", {
+        method: "POST",
+        headers: {
+          "X-Parse-Application-Id": process.env.BACK4APP_APP_ID,
+          "X-Parse-JavaScript-Key": process.env.BACK4APP_JS_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          username,
+          password,
+          acess,
+          idade: Number(idade),
+          loja: lojaExistente // Armazenamos apenas o ID como string
+        })
       });
+
+      const userData = await userResponse.json();
+
+      if (!userResponse.ok) {
+        return res.status(400).json({
+          success: false,
+          message: "Falha ao criar usuário",
+          error: userData.error || "Erro desconhecido"
+        });
+      }
+
+      userId = userData.objectId;
+      lojaId = lojaExistente;
     }
 
     return res.status(201).json({
       success: true,
-      message: "Usuário registrado com sucesso",
-      userId: newUserData.objectId,
-      lojaId: lojaExistente
+      message: "Registro concluído com sucesso",
+      data: {
+        userId,
+        lojaId
+      }
     });
 
   } catch (error) {
-    console.error("Erro inesperado:", error);
+    console.error("Erro interno:", error);
     return res.status(500).json({
       success: false,
       message: "Erro interno no servidor",
