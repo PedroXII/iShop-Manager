@@ -21,7 +21,6 @@ export default async function handler(req, res) {
           throw new Error("O campo 'loja' é obrigatório.");
         }
   
-        // Construir query de filtro
         let where = { loja };
         if (nome) where.nome = { $regex: nome, $options: "i" };
         if (porcentagemDesconto) where.porcentagemDesconto = Number(porcentagemDesconto);
@@ -40,8 +39,16 @@ export default async function handler(req, res) {
         }
   
         const data = await response.json();
-        console.log("Promoções carregadas:", data.results);
-        res.status(200).json(data.results);
+        
+        // Formatando a resposta para o frontend
+        const formattedResults = data.results.map(promocao => ({
+          ...promocao,
+          inicio: promocao.inicio?.iso || null,
+          fim: promocao.fim?.iso || null
+        }));
+  
+        console.log("Promoções carregadas:", formattedResults);
+        res.status(200).json(formattedResults);
       }
   
       // Adicionar Promoção (POST)
@@ -52,12 +59,10 @@ export default async function handler(req, res) {
           throw new Error("Os campos 'nome' e 'loja' são obrigatórios.");
         }
   
-        // Verificar se ambos produto e tipoProduto estão preenchidos
         if (produto && tipoProduto) {
           throw new Error("Uma promoção não pode ter ambos 'produto' e 'tipoProduto' preenchidos.");
         }
   
-        // Criar objeto para enviar ao Back4App
         const promocaoData = {
           nome,
           porcentagemDesconto: porcentagemDesconto ? Number(porcentagemDesconto) : undefined,
@@ -66,7 +71,7 @@ export default async function handler(req, res) {
           tipoProduto: tipoProduto || undefined
         };
   
-        // Adicionar datas apenas se foram fornecidas
+        // Formatar datas no formato específico do Back4App
         if (inicio) {
           promocaoData.inicio = {
             __type: "Date",
@@ -107,12 +112,10 @@ export default async function handler(req, res) {
           throw new Error("O campo 'objectId' é obrigatório para edição.");
         }
   
-        // Verificar se ambos produto e tipoProduto estão preenchidos
         if (produto && tipoProduto) {
           throw new Error("Uma promoção não pode ter ambos 'produto' e 'tipoProduto' preenchidos.");
         }
   
-        // Criar objeto para enviar ao Back4App
         const promocaoData = {
           nome,
           porcentagemDesconto: porcentagemDesconto ? Number(porcentagemDesconto) : undefined,
@@ -121,7 +124,6 @@ export default async function handler(req, res) {
           tipoProduto: tipoProduto || undefined
         };
   
-        // Adicionar datas apenas se foram fornecidas
         if (inicio) {
           promocaoData.inicio = {
             __type: "Date",

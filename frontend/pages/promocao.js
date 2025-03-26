@@ -22,7 +22,7 @@ export default function Promocao() {
   const [loja, setLoja] = useState(null);
   const router = useRouter();
 
-  // Carregar a loja do usuário logado apenas no lado do cliente
+  // Carregar a loja do usuário logado
   useEffect(() => {
     if (typeof window !== "undefined") {
       const loja = localStorage.getItem("loja");
@@ -76,17 +76,16 @@ export default function Promocao() {
       const data = await response.json();
 
       if (response.ok) {
-        // Atualizar a lista de promoções
         if (editingPromocao) {
           setPromocoes(
             promocoes.map((p) =>
-              p.objectId === editingPromocao.objectId ? data : p
+              p.objectId === editingPromocao.objectId ? { ...data, inicio: data.inicio?.iso, fim: data.fim?.iso } : p
             )
           );
         } else {
-          setPromocoes([...promocoes, data]);
+          setPromocoes([...promocoes, { ...data, inicio: data.inicio?.iso, fim: data.fim?.iso }]);
         }
-        // Limpar o formulário
+        
         setNome("");
         setPorcentagemDesconto("");
         setInicio("");
@@ -125,8 +124,11 @@ export default function Promocao() {
   const handleEdit = (promocao) => {
     setNome(promocao.nome);
     setPorcentagemDesconto(promocao.porcentagemDesconto || "");
-    setInicio(promocao.inicio ? promocao.inicio.split("T")[0] : "");
-    setFim(promocao.fim ? promocao.fim.split("T")[0] : "");
+    
+    // Corrigindo o tratamento das datas
+    setInicio(promocao.inicio ? promocao.inicio.split('T')[0] : "");
+    setFim(promocao.fim ? promocao.fim.split('T')[0] : "");
+    
     setProduto(promocao.produto || "");
     setTipoProduto(promocao.tipoProduto || "");
     setEditingPromocao(promocao);
@@ -157,6 +159,17 @@ export default function Promocao() {
       }
     } catch (error) {
       setError("Erro ao conectar com o servidor.");
+    }
+  };
+
+  // Função para formatar a data para exibição
+  const formatDate = (dateString) => {
+    if (!dateString) return "Não definido";
+    try {
+      const date = new Date(dateString);
+      return isNaN(date.getTime()) ? "Não definido" : date.toLocaleDateString();
+    } catch {
+      return "Não definido";
     }
   };
 
@@ -403,8 +416,7 @@ export default function Promocao() {
                             <h5>{promocao.nome}</h5>
                             <p>Desconto: {promocao.porcentagemDesconto}%</p>
                             <p>
-                              Período: {promocao.inicio ? new Date(promocao.inicio).toLocaleDateString() : "Não definido"} -{" "}
-                              {promocao.fim ? new Date(promocao.fim).toLocaleDateString() : "Não definido"}
+                              Período: {formatDate(promocao.inicio)} - {formatDate(promocao.fim)}
                             </p>
                             {promocao.produto && <p>Produto: {promocao.produto}</p>}
                             {promocao.tipoProduto && <p>Tipo de Produto: {promocao.tipoProduto}</p>}
