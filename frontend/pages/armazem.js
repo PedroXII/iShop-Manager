@@ -189,8 +189,11 @@ export default function Armazem() {
       
       <div>
         <main>
-          <section>
-            <nav id="navbar" className="navbar bg-primary col-12 navbar-expand-lg position-fixed">
+        <section>
+            <nav
+            id="navbar"
+              className="navbar bg-primary col-12 navbar-expand-lg position-fixed"
+            >
               <div className="container-fluid col-11 m-auto">
                 <Link href="/home">
                   <Image
@@ -198,7 +201,6 @@ export default function Armazem() {
                     alt="LOGO"
                     width={40}
                     height={40}
-                    className="cursor-pointer"
                   />
                 </Link>
                 <button
@@ -214,29 +216,45 @@ export default function Armazem() {
                 </button>
                 <div className="collapse navbar-collapse" id="navbarNav">
                   <ul className="navbar-nav ms-auto">
-                    <li className="nav-item">
-                      <Link href="/home" className="nav-link text-light">Home</Link>
+                  <li className="nav-item">
+                      <Link href="/home">
+                        <a className="nav-link text-light">Home</a>
+                      </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/funcionario" className="nav-link text-light">Funcionário</Link>
+                      <Link href="#top">
+                        <a className="nav-link text-light">Armazém</a>
+                      </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/cliente" className="nav-link text-light">Cliente</Link>
+                      <Link href="/fornecedor">
+                        <a className="nav-link text-light">Fornecedor</a>
+                      </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="#top" className="nav-link text-light">Armazém</Link>
+                      <Link href="/funcionario">
+                        <a className="nav-link text-light">Funcionário</a>
+                      </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/promocao" className="nav-link text-light">Promoção</Link>
+                      <Link href="/cliente">
+                        <a className="nav-link text-light">Cliente</a>
+                      </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/produto" className="nav-link text-light">Produto</Link>
+                      <Link href="/produto">
+                        <a className="nav-link text-light">Produto</a>
+                      </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/loja_parceira" className="nav-link text-light">Parceiro</Link>
+                      <Link href="/promocao">
+                        <a className="nav-link text-light">Promoção</a>
+                      </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/index" className="nav-link text-light">Logout</Link>
+                      <Link href="/index">
+                        <a className="nav-link text-light">Logout</a>
+                      </Link>
                     </li>
                   </ul>
                 </div>

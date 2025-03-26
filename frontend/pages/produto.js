@@ -166,9 +166,9 @@ export default function Product() {
       </Head>
       <div>
         <main>
-          <section>
+        <section>
             <nav
-              id="navbar"
+            id="navbar"
               className="navbar bg-primary col-12 navbar-expand-lg position-fixed"
             >
               <div className="container-fluid col-11 m-auto">
@@ -193,9 +193,19 @@ export default function Product() {
                 </button>
                 <div className="collapse navbar-collapse" id="navbarNav">
                   <ul className="navbar-nav ms-auto">
-                    <li className="nav-item">
+                  <li className="nav-item">
                       <Link href="/home">
                         <a className="nav-link text-light">Home</a>
+                      </Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link href="/armazem">
+                        <a className="nav-link text-light">Armazém</a>
+                      </Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link href="/fornecedor">
+                        <a className="nav-link text-light">Fornecedor</a>
                       </Link>
                     </li>
                     <li className="nav-item">
@@ -209,23 +219,13 @@ export default function Product() {
                       </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/armazem">
-                        <a className="nav-link text-light">Armazém</a>
-                      </Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link href="/promocao">
-                        <a className="nav-link text-light">Promoção</a>
-                      </Link>
-                    </li>
-                    <li className="nav-item">
                       <Link href="#top">
                         <a className="nav-link text-light">Produto</a>
                       </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/loja_parceira">
-                        <a className="nav-link text-light">Parceiro</a>
+                      <Link href="/promocao">
+                        <a className="nav-link text-light">Promoção</a>
                       </Link>
                     </li>
                     <li className="nav-item">

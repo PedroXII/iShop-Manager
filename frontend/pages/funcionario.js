@@ -208,6 +208,16 @@ export default function Funcionario() {
                       </Link>
                     </li>
                     <li className="nav-item">
+                      <Link href="/armazem">
+                        <a className="nav-link text-light">Armazém</a>
+                      </Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link href="/fornecedor">
+                        <a className="nav-link text-light">Fornecedor</a>
+                      </Link>
+                    </li>
+                    <li className="nav-item">
                       <Link href="#top">
                         <a className="nav-link text-light">Funcionário</a>
                       </Link>
@@ -218,23 +228,13 @@ export default function Funcionario() {
                       </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/armazem">
-                        <a className="nav-link text-light">Armazém</a>
-                      </Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link href="/promocao">
-                        <a className="nav-link text-light">Promoção</a>
-                      </Link>
-                    </li>
-                    <li className="nav-item">
                       <Link href="/produto">
                         <a className="nav-link text-light">Produto</a>
                       </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/loja_parceira">
-                        <a className="nav-link text-light">Parceiro</a>
+                      <Link href="/promocao">
+                        <a className="nav-link text-light">Promoção</a>
                       </Link>
                     </li>
                     <li className="nav-item">

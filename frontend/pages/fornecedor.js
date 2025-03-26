@@ -2,12 +2,12 @@ import Link from "next/link";
 import Image from "next/image";
 import Head from "next/head";
 
-export default function LojaParceira() {
+export default function Fornecedor() {
   return (
     //O front-end.
     <>
       <Head>
-        <title>iShop Manager: Loja Parceira</title>
+        <title>iShop Manager: Fornecedor</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta charSet="UTF-8" />
         <link rel="icon" href="/favicon.ico"/>
@@ -47,6 +47,16 @@ export default function LojaParceira() {
                       </Link>
                     </li>
                     <li className="nav-item">
+                      <Link href="/armazem">
+                        <a className="nav-link text-light">Armazém</a>
+                      </Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link href="#top">
+                        <a className="nav-link text-light">Fornecedor</a>
+                      </Link>
+                    </li>
+                    <li className="nav-item">
                       <Link href="/funcionario">
                         <a className="nav-link text-light">Funcionário</a>
                       </Link>
@@ -57,23 +67,13 @@ export default function LojaParceira() {
                       </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/armazem">
-                        <a className="nav-link text-light">Armazém</a>
-                      </Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link href="/promocao">
-                        <a className="nav-link text-light">Promoção</a>
-                      </Link>
-                    </li>
-                    <li className="nav-item">
                       <Link href="/produto">
                         <a className="nav-link text-light">Produto</a>
                       </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="#top">
-                        <a className="nav-link text-light">Parceiro</a>
+                      <Link href="/promocao">
+                        <a className="nav-link text-light">Promoção</a>
                       </Link>
                     </li>
                     <li className="nav-item">
