@@ -13,32 +13,28 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Verificar se todos os campos estão preenchidos
     if (!username || !password) {
       setError("Todos os campos são obrigatórios.");
       return;
     }
 
     try {
-      // Fazer a requisição para a API de login
       const response = await fetch("/api/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username,
-          password,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        // Armazenar a loja do usuário no localStorage
-        localStorage.setItem("loja", data.user.loja);
+        console.log("Usuário autenticado:", data);
 
-        // Redirecionar todos os usuários para a tela "Cliente"
+        // Salvar loja e nível de acesso no localStorage
+        localStorage.setItem("loja", data.user.loja);
+        localStorage.setItem("acess", data.nivelAcesso); // ✅ Correção aqui
+
+        // Redirecionar para a página Cliente
         router.push("/cliente");
       } else {
         setError(data.message || "Erro ao fazer login.");
@@ -56,6 +52,7 @@ export default function Login() {
         <meta charSet="UTF-8" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
+
       <div>
         <main>
           <section>
