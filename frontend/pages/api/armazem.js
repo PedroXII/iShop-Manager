@@ -11,31 +11,17 @@ export default async function handler(req, res) {
   };
 
   try {
-    const userLoja = req.headers['x-user-loja'];
-    const userAcess = req.headers['x-user-acess'];
-
-    // Verificação básica de autenticação
-    if (!userLoja) {
-      throw new Error("Usuário não autenticado");
-    }
-
     // Listar Armazéns (GET)
     if (req.method === "GET") {
-      const { nome, localizacao, capacidadeMin, capacidadeMax } = req.query;
-      
-      let where = { loja: userLoja }; // Filtra apenas pela loja do usuário
-      
-      // Adiciona filtros se existirem
-      if (nome) where.nome = { $regex: nome, $options: 'i' };
-      if (localizacao) where.$or = [
-        { pais: { $regex: localizacao, $options: 'i' } },
-        { estado: { $regex: localizacao, $options: 'i' } },
-        { cidade: { $regex: localizacao, $options: 'i' } }
-      ];
-      if (capacidadeMin) where.capacidadeTotal = { $gte: Number(capacidadeMin) };
-      if (capacidadeMax) where.capacidadeTotal = { ...where.capacidadeTotal, $lte: Number(capacidadeMax) };
+      const { loja } = req.query; // Obter a loja do usuário logado
 
-      const response = await fetch(`${BASE_URL}?where=${encodeURIComponent(JSON.stringify(where))}`, {
+      if (!loja) {
+        throw new Error("O campo 'loja' é obrigatório.");
+      }
+
+      // Filtro para buscar apenas os armazéns da loja do usuário logado
+      const response = await fetch(`${BASE_URL}?where={"loja":"${loja}"}`, {
+        method: "GET",
         headers,
       });
 
@@ -45,22 +31,26 @@ export default async function handler(req, res) {
       }
 
       const data = await response.json();
-      res.status(200).json(data.results || []);
+      res.status(200).json(data.results);
     }
 
     // Adicionar Armazém (POST)
     else if (req.method === "POST") {
-      const { nome, capacidadeTotal } = req.body;
+      const { nome, capacidadeTotal, pais, estado, cidade, rua, loja } = req.body;
 
-      if (!nome || !capacidadeTotal) {
-        throw new Error("Nome e capacidade total são obrigatórios.");
+      if (!loja) {
+        throw new Error("O campo 'loja' é obrigatório.");
       }
 
       const body = JSON.stringify({
-        ...req.body,
-        capacidadeTotal: Number(capacidadeTotal),
+        nome,
+        capacidadeTotal: Number(capacidadeTotal) || 0,
         capacidadeOcupada: 0,
-        loja: userLoja // Garante que o armazém será da loja do usuário
+        pais: pais || "",
+        estado: estado || "",
+        cidade: cidade || "",
+        rua: rua || "",
+        loja,
       });
 
       const response = await fetch(BASE_URL, {
@@ -81,23 +71,20 @@ export default async function handler(req, res) {
     // Editar Armazém (PUT)
     else if (req.method === "PUT") {
       const { objectId } = req.query;
-      const { nome, capacidadeTotal } = req.body;
+      const { nome, capacidadeTotal, pais, estado, cidade, rua, loja } = req.body;
 
       if (!objectId) {
-        throw new Error("ID do armazém é obrigatório para edição.");
-      }
-
-      // Verifica se o armazém pertence à loja do usuário
-      const verifyResponse = await fetch(`${BASE_URL}/${objectId}`, { headers });
-      const existingData = await verifyResponse.json();
-      
-      if (existingData.loja !== userLoja) {
-        throw new Error("Você só pode editar armazéns da sua loja.");
+        throw new Error("O campo 'objectId' é obrigatório para edição.");
       }
 
       const body = JSON.stringify({
-        ...req.body,
-        capacidadeTotal: Number(capacidadeTotal)
+        nome,
+        capacidadeTotal: Number(capacidadeTotal) || 0,
+        pais,
+        estado,
+        cidade,
+        rua,
+        loja,
       });
 
       const response = await fetch(`${BASE_URL}/${objectId}`, {
@@ -120,20 +107,7 @@ export default async function handler(req, res) {
       const { objectId } = req.query;
 
       if (!objectId) {
-        throw new Error("ID do armazém é obrigatório para exclusão.");
-      }
-
-      // Verifica se é admin
-      if (userAcess !== 'admin') {
-        throw new Error("Apenas administradores podem excluir armazéns.");
-      }
-
-      // Verifica se o armazém pertence à loja do usuário
-      const verifyResponse = await fetch(`${BASE_URL}/${objectId}`, { headers });
-      const existingData = await verifyResponse.json();
-      
-      if (existingData.loja !== userLoja) {
-        throw new Error("Você só pode excluir armazéns da sua loja.");
+        throw new Error("O campo 'objectId' é obrigatório para exclusão.");
       }
 
       const response = await fetch(`${BASE_URL}/${objectId}`, {
@@ -146,7 +120,7 @@ export default async function handler(req, res) {
         throw new Error(errorData.message || "Erro ao excluir armazém.");
       }
 
-      res.status(200).json({ success: true });
+      res.status(200).json({ message: "Armazém excluído com sucesso." });
     }
 
     // Método não suportado
@@ -154,10 +128,6 @@ export default async function handler(req, res) {
       res.status(405).json({ message: "Método não permitido." });
     }
   } catch (error) {
-    console.error("Erro na API:", error.message);
-    res.status(500).json({ 
-      message: error.message || "Erro interno no servidor.",
-      error: error.stack 
-    });
+    res.status(500).json({ message: error.message || "Erro interno no servidor." });
   }
 }
