@@ -1,4 +1,5 @@
 // pages/api/produto.js
+
 export default async function handler(req, res) {
   const BASE_URL = "https://parseapi.back4app.com/classes/Produto";
   const APP_ID = process.env.BACK4APP_APP_ID;
@@ -11,104 +12,117 @@ export default async function handler(req, res) {
   };
 
   try {
-    // Listar produtos (GET)
+    // Listar Produtos (GET)
     if (req.method === "GET") {
       const { loja } = req.query;
+
       if (!loja) {
-        return res.status(400).json({ message: "O campo 'loja' é obrigatório." });
+        throw new Error("O campo 'loja' é obrigatório.");
       }
-      
-      const response = await fetch(`${BASE_URL}?where={\"lojaVendedora\":{\"$in\":[\"${loja}\"]}}`, {
+
+      const response = await fetch(`${BASE_URL}?where={"loja":"${loja}"}`, {
         method: "GET",
         headers,
       });
-      
-      const data = await response.json();
+
       if (!response.ok) {
-        return res.status(400).json({ message: data.error || "Erro ao buscar produtos." });
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erro ao carregar produtos.");
       }
+
+      const data = await response.json();
       res.status(200).json(data.results);
     }
-    
-    // Criar produto (POST)
+
+    // Adicionar Produto (POST)
     else if (req.method === "POST") {
-      const { nome, marca, preco, tipo, armazemProduto, lojaVendedora } = req.body;
-      if (!lojaVendedora || !nome || !preco || !tipo) {
-        return res.status(400).json({ message: "Todos os campos obrigatórios devem ser preenchidos." });
+      const { nome, categoria, preco, estoque, loja } = req.body;
+
+      if (!loja) {
+        throw new Error("O campo 'loja' é obrigatório.");
       }
 
       const body = JSON.stringify({
         nome,
-        marca: marca || "",
-        preco: Number(preco),
-        tipo,
-        armazemProduto: armazemProduto || [],
-        lojaVendedora: [lojaVendedora],
+        categoria,
+        preco: Number(preco) || 0,
+        estoque: Number(estoque) || 0,
+        loja,
       });
-      
-      console.log("Enviando dados para Back4App:", body);
-      
+
       const response = await fetch(BASE_URL, {
         method: "POST",
         headers,
         body,
       });
 
-      const data = await response.json();
       if (!response.ok) {
-        return res.status(400).json({ message: data.error || "Erro ao adicionar produto." });
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erro ao adicionar produto.");
       }
+
+      const data = await response.json();
       res.status(201).json(data);
     }
-    
-    // Atualizar produto (PUT)
+
+    // Editar Produto (PUT)
     else if (req.method === "PUT") {
       const { objectId } = req.query;
-      const { nome, marca, preco, tipo, armazemProduto, lojaVendedora } = req.body;
-      
+      const { nome, categoria, preco, estoque, loja } = req.body;
+
       if (!objectId) {
-        return res.status(400).json({ message: "O campo 'objectId' é obrigatório para edição." });
+        throw new Error("O campo 'objectId' é obrigatório para edição.");
       }
-      
-      const body = JSON.stringify({ nome, marca, preco: Number(preco), tipo, armazemProduto, lojaVendedora });
-      
+
+      const body = JSON.stringify({
+        nome,
+        categoria,
+        preco: Number(preco) || 0,
+        estoque: Number(estoque) || 0,
+        loja,
+      });
+
       const response = await fetch(`${BASE_URL}/${objectId}`, {
         method: "PUT",
         headers,
         body,
       });
-      
-      const data = await response.json();
+
       if (!response.ok) {
-        return res.status(400).json({ message: data.error || "Erro ao atualizar produto." });
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erro ao atualizar produto.");
       }
+
+      const data = await response.json();
       res.status(200).json(data);
     }
-    
-    // Excluir produto (DELETE)
+
+    // Excluir Produto (DELETE)
     else if (req.method === "DELETE") {
       const { objectId } = req.query;
+
       if (!objectId) {
-        return res.status(400).json({ message: "O campo 'objectId' é obrigatório para exclusão." });
+        throw new Error("O campo 'objectId' é obrigatório para exclusão.");
       }
-      
+
       const response = await fetch(`${BASE_URL}/${objectId}`, {
         method: "DELETE",
         headers,
       });
 
-      const data = await response.json();
       if (!response.ok) {
-        return res.status(400).json({ message: data.error || "Erro ao excluir produto." });
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erro ao excluir produto.");
       }
+
       res.status(200).json({ message: "Produto excluído com sucesso." });
     }
-    
+
+    // Método não suportado
     else {
       res.status(405).json({ message: "Método não permitido." });
     }
   } catch (error) {
-    console.error("Erro no servidor:", error);
     res.status(500).json({ message: error.message || "Erro interno no servidor." });
   }
 }
