@@ -15,38 +15,49 @@ export default async function handler(req, res) {
     if (req.method === "GET") {
       const { loja } = req.query;
       if (!loja) {
-        throw new Error("O campo 'loja' é obrigatório.");
+        return res.status(400).json({ message: "O campo 'loja' é obrigatório." });
       }
+      
       const response = await fetch(`${BASE_URL}?where={\"lojaVendedora\":{\"$in\":[\"${loja}\"]}}`, {
         method: "GET",
         headers,
       });
       
-      if (!response.ok) {
-        throw new Error("Erro ao buscar produtos.");
-      }
       const data = await response.json();
+      if (!response.ok) {
+        return res.status(400).json({ message: data.error || "Erro ao buscar produtos." });
+      }
       res.status(200).json(data.results);
     }
     
     // Criar produto (POST)
     else if (req.method === "POST") {
       const { nome, marca, preco, tipo, armazemProduto, lojaVendedora } = req.body;
-      if (!lojaVendedora) {
-        throw new Error("A loja vendedora é obrigatória.");
+      if (!lojaVendedora || !nome || !preco || !tipo) {
+        return res.status(400).json({ message: "Todos os campos obrigatórios devem ser preenchidos." });
       }
 
-      const body = JSON.stringify({ nome, marca, preco, tipo, armazemProduto, lojaVendedora: [lojaVendedora] });
+      const body = JSON.stringify({
+        nome,
+        marca: marca || "",
+        preco: Number(preco),
+        tipo,
+        armazemProduto: armazemProduto || [],
+        lojaVendedora: [lojaVendedora],
+      });
+      
+      console.log("Enviando dados para Back4App:", body);
+      
       const response = await fetch(BASE_URL, {
         method: "POST",
         headers,
         body,
       });
 
-      if (!response.ok) {
-        throw new Error("Erro ao adicionar produto.");
-      }
       const data = await response.json();
+      if (!response.ok) {
+        return res.status(400).json({ message: data.error || "Erro ao adicionar produto." });
+      }
       res.status(201).json(data);
     }
     
@@ -56,20 +67,21 @@ export default async function handler(req, res) {
       const { nome, marca, preco, tipo, armazemProduto, lojaVendedora } = req.body;
       
       if (!objectId) {
-        throw new Error("O campo 'objectId' é obrigatório para edição.");
+        return res.status(400).json({ message: "O campo 'objectId' é obrigatório para edição." });
       }
       
-      const body = JSON.stringify({ nome, marca, preco, tipo, armazemProduto, lojaVendedora });
+      const body = JSON.stringify({ nome, marca, preco: Number(preco), tipo, armazemProduto, lojaVendedora });
+      
       const response = await fetch(`${BASE_URL}/${objectId}`, {
         method: "PUT",
         headers,
         body,
       });
       
-      if (!response.ok) {
-        throw new Error("Erro ao atualizar produto.");
-      }
       const data = await response.json();
+      if (!response.ok) {
+        return res.status(400).json({ message: data.error || "Erro ao atualizar produto." });
+      }
       res.status(200).json(data);
     }
     
@@ -77,15 +89,17 @@ export default async function handler(req, res) {
     else if (req.method === "DELETE") {
       const { objectId } = req.query;
       if (!objectId) {
-        throw new Error("O campo 'objectId' é obrigatório para exclusão.");
+        return res.status(400).json({ message: "O campo 'objectId' é obrigatório para exclusão." });
       }
+      
       const response = await fetch(`${BASE_URL}/${objectId}`, {
         method: "DELETE",
         headers,
       });
 
+      const data = await response.json();
       if (!response.ok) {
-        throw new Error("Erro ao excluir produto.");
+        return res.status(400).json({ message: data.error || "Erro ao excluir produto." });
       }
       res.status(200).json({ message: "Produto excluído com sucesso." });
     }
@@ -94,6 +108,7 @@ export default async function handler(req, res) {
       res.status(405).json({ message: "Método não permitido." });
     }
   } catch (error) {
+    console.error("Erro no servidor:", error);
     res.status(500).json({ message: error.message || "Erro interno no servidor." });
   }
 }
