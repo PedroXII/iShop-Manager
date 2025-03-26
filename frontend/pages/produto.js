@@ -1,102 +1,153 @@
+import { useState, useEffect } from 'react';
 import Link from "next/link";
 import Image from "next/image";
 import Head from "next/head";
+import { useRouter } from "next/router";
 
 export default function Produto() {
+  const router = useRouter();
+  const [produtos, setProdutos] = useState([]);
+  const [nome, setNome] = useState("");
+  const [marca, setMarca] = useState("");
+  const [preco, setPreco] = useState("");
+  const [tipo, setTipo] = useState("");
+  const [loja, setLoja] = useState(null);
+  const [editingProduto, setEditingProduto] = useState(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const loja = localStorage.getItem("loja");
+      setLoja(loja);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (loja) {
+      fetchProdutos();
+    }
+  }, [loja]);
+
+  const fetchProdutos = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/produto?loja=${loja}`);
+      const data = await response.json();
+      if (response.ok) {
+        setProdutos(data);
+      } else {
+        setError(data.message || "Erro ao carregar produtos.");
+      }
+    } catch (error) {
+      setError("Erro ao conectar com o servidor.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    if (!loja) {
+      setError("Loja não encontrada. Faça login novamente.");
+      return;
+    }
+
+    if (!nome || !preco || !tipo) {
+      setError("Nome, preço e tipo são obrigatórios.");
+      return;
+    }
+
+    const produtoData = { nome, marca, preco, tipo, lojaVendedora: loja };
+    setLoading(true);
+    try {
+      const url = editingProduto ? `/api/produto?objectId=${editingProduto.objectId}` : "/api/produto";
+      const method = editingProduto ? "PUT" : "POST";
+      const response = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(produtoData),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        if (editingProduto) {
+          setProdutos(produtos.map((p) => (p.objectId === editingProduto.objectId ? data : p)));
+        } else {
+          setProdutos([...produtos, data]);
+        }
+        setNome("");
+        setMarca("");
+        setPreco("");
+        setTipo("");
+        setEditingProduto(null);
+      } else {
+        setError(data.message || "Erro ao salvar produto.");
+      }
+    } catch (error) {
+      setError("Erro ao conectar com o servidor.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (objectId) => {
+    if (window.confirm("Tem certeza que deseja excluir este produto?")) {
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/produto?objectId=${objectId}`, { method: "DELETE" });
+        if (response.ok) {
+          setProdutos(produtos.filter((p) => p.objectId !== objectId));
+        } else {
+          const data = await response.json();
+          setError(data.message || "Erro ao excluir produto.");
+        }
+      } catch (error) {
+        setError("Erro ao conectar com o servidor.");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   return (
-    //O front-end.
     <>
       <Head>
         <title>iShop Manager: Produtos</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta charSet="UTF-8" />
-        <link rel="icon" href="/favicon.ico"/>
       </Head>
       <div>
         <main>
-        <section>
-            <nav
-            id="navbar"
-              className="navbar bg-primary col-12 navbar-expand-lg position-fixed"
-            >
-              <div className="container-fluid col-11 m-auto">
-                <Link href="/home">
-                  <Image
-                    src="/Varios-12-150ppp-01.jpg"
-                    alt="LOGO"
-                    width={40}
-                    height={40}
-                  />
-                </Link>
-                <button
-                  className="navbar-toggler"
-                  type="button"
-                  data-bs-toggle="collapse"
-                  data-bs-target="#navbarNav"
-                  aria-controls="navbarNav"
-                  aria-expanded="false"
-                  aria-label="Toggle navigation"
-                >
-                  <span className="navbar-toggler-icon"></span>
-                </button>
-                <div className="collapse navbar-collapse" id="navbarNav">
-                  <ul className="navbar-nav ms-auto">
-                  <li className="nav-item">
-                      <Link href="/home">
-                        <a className="nav-link text-light">Home</a>
-                      </Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link href="/funcionario">
-                        <a className="nav-link text-light">Funcionário</a>
-                      </Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link href="/cliente">
-                        <a className="nav-link text-light">Cliente</a>
-                      </Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link href="/armazem">
-                        <a className="nav-link text-light">Armazém</a>
-                      </Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link href="/promocao">
-                        <a className="nav-link text-light">Promoção</a>
-                      </Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link href="#top">
-                        <a className="nav-link text-light">Produto</a>
-                      </Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link href="/loja_parceira">
-                        <a className="nav-link text-light">Parceiro</a>
-                      </Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link href="/index">
-                        <a className="nav-link text-light">Logout</a>
-                      </Link>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </nav>
-          </section>
-
-          <section id="top" className="d-flex flex-column min-vh-100">
-            <div className="container row m-auto">
-              
+          <nav className="navbar bg-primary navbar-expand-lg">
+            <div className="container-fluid">
+              <Link href="/home">
+                <Image src="/Varios-12-150ppp-01.jpg" alt="LOGO" width={40} height={40} />
+              </Link>
             </div>
+          </nav>
+          <section className="container mt-5">
+            <h2>Gerenciamento de Produtos</h2>
+            {error && <div style={{ color: "red" }}>{error}</div>}
+            <form onSubmit={handleSubmit}>
+              <input type="text" placeholder="Nome" value={nome} onChange={(e) => setNome(e.target.value)} required />
+              <input type="text" placeholder="Marca" value={marca} onChange={(e) => setMarca(e.target.value)} />
+              <input type="number" placeholder="Preço" value={preco} onChange={(e) => setPreco(e.target.value)} required />
+              <input type="text" placeholder="Tipo" value={tipo} onChange={(e) => setTipo(e.target.value)} required />
+              <button type="submit" disabled={loading}>{editingProduto ? "Atualizar" : "Cadastrar"}</button>
+            </form>
+            <ul>
+              {produtos.map((produto) => (
+                <li key={produto.objectId}>
+                  {produto.nome} - {produto.marca} - R${produto.preco}
+                  <button onClick={() => setEditingProduto(produto)}>Editar</button>
+                  <button onClick={() => handleDelete(produto.objectId)}>Excluir</button>
+                </li>
+              ))}
+            </ul>
           </section>
-
           <footer className="d-flex align-items-center justify-content-center py-3 mt-4">
-            <p className="mb-0">
-              &copy; {new Date().getFullYear()} iShop Manager. Todos os direitos reservados.
-            </p>
+            <p className="mb-0">&copy; {new Date().getFullYear()} iShop Manager. Todos os direitos reservados.</p>
           </footer>
         </main>
       </div>
