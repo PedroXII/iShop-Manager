@@ -6,141 +6,178 @@ import { useRouter } from "next/router";
 
 export default function Armazem() {
   const router = useRouter();
-  const [filtros, setFiltros] = useState({
-    nome: '',
-    localizacao: '',
-    capacidadeMin: '',
-    capacidadeMax: ''
-  });
   const [armazens, setArmazens] = useState([]);
-  const [editando, setEditando] = useState(null);
-  const [novoArmazem, setNovoArmazem] = useState({
-    nome: '',
-    capacidadeTotal: '',
-    pais: '',
-    estado: '',
-    cidade: '',
-    rua: ''
-  });
-  const [error, setError] = useState('');
-  const [aviso, setAviso] = useState('');
+  const [nome, setNome] = useState("");
+  const [capacidadeTotal, setCapacidadeTotal] = useState("");
+  const [pais, setPais] = useState("");
+  const [estado, setEstado] = useState("");
+  const [cidade, setCidade] = useState("");
+  const [rua, setRua] = useState("");
+  const [error, setError] = useState("");
+  const [editingArmazem, setEditingArmazem] = useState(null);
+  const [searchNome, setSearchNome] = useState("");
+  const [searchLocalizacao, setSearchLocalizacao] = useState("");
+  const [showResults, setShowResults] = useState(false);
+  const [loja, setLoja] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handleApiCall = async (url, method, body) => {
+  // Carregar a loja do usuário logado
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const loja = localStorage.getItem("loja");
+      setLoja(loja);
+    }
+  }, []);
+
+  // Carregar armazéns da loja do usuário logado
+  useEffect(() => {
+    if (loja) {
+      const fetchArmazens = async () => {
+        setLoading(true);
+        try {
+          const response = await fetch(`/api/armazem?loja=${loja}`);
+          const data = await response.json();
+          if (response.ok) {
+            setArmazens(data);
+          } else {
+            setError(data.message || "Erro ao carregar armazéns.");
+          }
+        } catch (error) {
+          setError("Erro ao conectar com o servidor.");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchArmazens();
+    }
+  }, [loja]);
+
+  // Adicionar ou editar armazém
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    if (!loja) {
+      setError("Loja não encontrada. Faça login novamente.");
+      return;
+    }
+
+    if (!nome || !capacidadeTotal) {
+      setError("Nome e capacidade total são obrigatórios.");
+      return;
+    }
+
+    const armazemData = {
+      nome,
+      capacidadeTotal,
+      pais,
+      estado,
+      cidade,
+      rua,
+      loja,
+    };
+
     setLoading(true);
-    setError('');
     try {
-      const loja = localStorage.getItem('loja');
-      const acess = localStorage.getItem('acess');
-      
-      if (!loja) {
-        router.push('/login');
-        return null;
-      }
+      const url = editingArmazem
+        ? `/api/armazem?objectId=${editingArmazem.objectId}`
+        : "/api/armazem";
+      const method = editingArmazem ? "PUT" : "POST";
 
       const response = await fetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json',
-          'X-User-Loja': loja,
-          'X-User-Acess': acess
+          "Content-Type": "application/json",
         },
-        body: body ? JSON.stringify(body) : undefined
+        body: JSON.stringify(armazemData),
       });
 
       const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || `Erro ${response.status}`);
-      }
 
-      return data;
+      if (response.ok) {
+        // Atualizar a lista de armazéns
+        if (editingArmazem) {
+          setArmazens(
+            armazens.map((a) =>
+              a.objectId === editingArmazem.objectId ? data : a
+            )
+          );
+        } else {
+          setArmazens([...armazens, data]);
+        }
+        // Limpar o formulário
+        setNome("");
+        setCapacidadeTotal("");
+        setPais("");
+        setEstado("");
+        setCidade("");
+        setRua("");
+        setEditingArmazem(null);
+      } else {
+        setError(data.message || "Erro ao salvar armazém.");
+      }
     } catch (error) {
-      setError(error.message);
-      return null;
+      setError("Erro ao conectar com o servidor.");
     } finally {
       setLoading(false);
     }
   };
 
-  const pesquisarArmazens = async () => {
-    const loja = localStorage.getItem('loja');
-    if (!loja) {
-      setError('Loja não identificada');
-      return;
-    }
-  
-    // Construir query string apenas com os filtros de pesquisa
-    const params = new URLSearchParams();
-    if (filtros.nome) params.append('nome', filtros.nome);
-    if (filtros.localizacao) params.append('localizacao', filtros.localizacao);
-    if (filtros.capacidadeMin) params.append('capacidadeMin', filtros.capacidadeMin);
-    if (filtros.capacidadeMax) params.append('capacidadeMax', filtros.capacidadeMax);
-  
-    const data = await handleApiCall(`/api/armazem?${params.toString()}`, 'GET');
-    
-    if (data) {
-      setArmazens(data);
-    }
-  };
+  // Excluir armazém
+  const handleDelete = async (objectId) => {
+    if (window.confirm("Tem certeza que deseja excluir este armazém?")) {
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/armazem?objectId=${objectId}`, {
+          method: "DELETE",
+        });
 
-  const salvarArmazem = async (e) => {
-    e.preventDefault();
-    setError('');
-    
-    if (!novoArmazem.nome || !novoArmazem.capacidadeTotal) {
-      setAviso('Atenção: Nome e capacidade total são obrigatórios');
-      return;
-    }
-
-    const loja = localStorage.getItem('loja');
-    if (!loja) {
-      setError('Loja não identificada');
-      return;
-    }
-
-    const armazemData = {
-      ...novoArmazem,
-      capacidadeTotal: Number(novoArmazem.capacidadeTotal),
-      capacidadeOcupada: 0,
-      loja
-    };
-
-    const url = editando ? `/api/armazem?id=${editando}` : '/api/armazem';
-    const method = editando ? 'PUT' : 'POST';
-    
-    const data = await handleApiCall(url, method, armazemData);
-    
-    if (data) {
-      setNovoArmazem({ 
-        nome: '', 
-        capacidadeTotal: '',
-        pais: '',
-        estado: '',
-        cidade: '',
-        rua: ''
-      });
-      setEditando(null);
-      setAviso('');
-      pesquisarArmazens();
-    }
-  };
-
-  const excluirArmazem = async (id) => {
-    if (window.confirm('Tem certeza que deseja excluir este armazém?')) {
-      const data = await handleApiCall(`/api/armazem?id=${id}`, 'DELETE');
-      if (data?.success) {
-        pesquisarArmazens();
+        if (response.ok) {
+          setArmazens(armazens.filter((a) => a.objectId !== objectId));
+        } else {
+          const data = await response.json();
+          setError(data.message || "Erro ao excluir armazém.");
+        }
+      } catch (error) {
+        setError("Erro ao conectar com o servidor.");
+      } finally {
+        setLoading(false);
       }
     }
   };
 
-  useEffect(() => {
-    const loja = localStorage.getItem('loja');
-    if (!loja) {
-      router.push('/login');
-    }
-  }, [router]);
+  // Preencher formulário para edição
+  const handleEdit = (armazem) => {
+    setNome(armazem.nome);
+    setCapacidadeTotal(armazem.capacidadeTotal);
+    setPais(armazem.pais || "");
+    setEstado(armazem.estado || "");
+    setCidade(armazem.cidade || "");
+    setRua(armazem.rua || "");
+    setEditingArmazem(armazem);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Filtrar armazéns com base nos critérios de pesquisa
+  const filteredArmazens = armazens.filter((armazem) => {
+    const localizacao = [armazem.cidade, armazem.estado, armazem.pais]
+      .filter(Boolean)
+      .join(", ")
+      .toLowerCase();
+    
+    return (
+      (searchNome === "" ||
+        armazem.nome.toLowerCase().includes(searchNome.toLowerCase())) &&
+      (searchLocalizacao === "" ||
+        localizacao.includes(searchLocalizacao.toLowerCase()))
+    );
+  });
+
+  // Função para lidar com a pesquisa
+  const handleSearch = () => {
+    setShowResults(true);
+  };
 
   return (
     <>
@@ -210,83 +247,13 @@ export default function Armazem() {
           <section id="top" className="d-flex flex-column min-vh-100" style={{ paddingTop: '80px' }}>
             <div className="container">
               {error && <div className="alert alert-danger">{error}</div>}
-              {aviso && <div className="alert alert-warning">{aviso}</div>}
-
-              <div className="card mb-4">
-                <div className="card-body">
-                  <h5 className="card-title">🔍 Pesquisar Armazéns</h5>
-                  <div className="row g-3">
-                    <div className="col-md-4">
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="Nome do armazém"
-                        value={filtros.nome}
-                        onChange={(e) => setFiltros({...filtros, nome: e.target.value})}
-                      />
-                    </div>
-                    <div className="col-md-4">
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="País, estado ou cidade"
-                        value={filtros.localizacao}
-                        onChange={(e) => setFiltros({...filtros, localizacao: e.target.value})}
-                      />
-                    </div>
-                    <div className="col-md-4">
-                      <div className="input-group">
-                        <input
-                          type="number"
-                          className="form-control"
-                          placeholder="Mínima (L)"
-                          value={filtros.capacidadeMin}
-                          onChange={(e) => setFiltros({...filtros, capacidadeMin: e.target.value})}
-                        />
-                        <input
-                          type="number"
-                          className="form-control"
-                          placeholder="Máxima (L)"
-                          value={filtros.capacidadeMax}
-                          onChange={(e) => setFiltros({...filtros, capacidadeMax: e.target.value})}
-                        />
-                      </div>
-                    </div>
-                    <div className="col-12">
-                      <div className="d-flex gap-2">
-                        <button 
-                          className="btn btn-primary flex-grow-1"
-                          onClick={pesquisarArmazens}
-                          disabled={loading}
-                        >
-                          {loading ? 'Pesquisando...' : 'Pesquisar'}
-                        </button>
-                        <button 
-                          className="btn btn-outline-secondary"
-                          onClick={() => {
-                            setFiltros({
-                              nome: '',
-                              localizacao: '',
-                              capacidadeMin: '',
-                              capacidadeMax: ''
-                            });
-                            setArmazens([]);
-                          }}
-                        >
-                          Limpar
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
               <div className="card mb-4">
                 <div className="card-body">
                   <h5 className="card-title">
-                    {editando ? '✏️ Editar Armazém' : '➕ Novo Armazém'}
+                    {editingArmazem ? '✏️ Editar Armazém' : '➕ Novo Armazém'}
                   </h5>
-                  <form onSubmit={salvarArmazem}>
+                  <form onSubmit={handleSubmit}>
                     <div className="row g-3 mb-3">
                       <div className="col-md-6">
                         <label className="form-label">Nome*</label>
@@ -294,8 +261,8 @@ export default function Armazem() {
                           type="text"
                           className="form-control"
                           placeholder="Nome do armazém"
-                          value={novoArmazem.nome}
-                          onChange={(e) => setNovoArmazem({...novoArmazem, nome: e.target.value})}
+                          value={nome}
+                          onChange={(e) => setNome(e.target.value)}
                           required
                         />
                       </div>
@@ -306,8 +273,8 @@ export default function Armazem() {
                           className="form-control"
                           placeholder="Em litros"
                           min="0"
-                          value={novoArmazem.capacidadeTotal}
-                          onChange={(e) => setNovoArmazem({...novoArmazem, capacidadeTotal: e.target.value})}
+                          value={capacidadeTotal}
+                          onChange={(e) => setCapacidadeTotal(e.target.value)}
                           required
                         />
                       </div>
@@ -320,8 +287,8 @@ export default function Armazem() {
                           type="text"
                           className="form-control"
                           placeholder="Ex: Brasil"
-                          value={novoArmazem.pais}
-                          onChange={(e) => setNovoArmazem({...novoArmazem, pais: e.target.value})}
+                          value={pais}
+                          onChange={(e) => setPais(e.target.value)}
                         />
                       </div>
                       <div className="col-md-3">
@@ -330,8 +297,8 @@ export default function Armazem() {
                           type="text"
                           className="form-control"
                           placeholder="Ex: São Paulo"
-                          value={novoArmazem.estado}
-                          onChange={(e) => setNovoArmazem({...novoArmazem, estado: e.target.value})}
+                          value={estado}
+                          onChange={(e) => setEstado(e.target.value)}
                         />
                       </div>
                       <div className="col-md-3">
@@ -340,8 +307,8 @@ export default function Armazem() {
                           type="text"
                           className="form-control"
                           placeholder="Ex: Campinas"
-                          value={novoArmazem.cidade}
-                          onChange={(e) => setNovoArmazem({...novoArmazem, cidade: e.target.value})}
+                          value={cidade}
+                          onChange={(e) => setCidade(e.target.value)}
                         />
                       </div>
                       <div className="col-md-3">
@@ -350,8 +317,8 @@ export default function Armazem() {
                           type="text"
                           className="form-control"
                           placeholder="Rua, número"
-                          value={novoArmazem.rua}
-                          onChange={(e) => setNovoArmazem({...novoArmazem, rua: e.target.value})}
+                          value={rua}
+                          onChange={(e) => setRua(e.target.value)}
                         />
                       </div>
                     </div>
@@ -362,22 +329,20 @@ export default function Armazem() {
                         className="btn btn-success flex-grow-1"
                         disabled={loading}
                       >
-                        {loading ? 'Salvando...' : (editando ? 'Atualizar' : 'Cadastrar')}
+                        {loading ? 'Salvando...' : (editingArmazem ? 'Atualizar' : 'Cadastrar')}
                       </button>
-                      {editando && (
+                      {editingArmazem && (
                         <button 
                           type="button" 
                           className="btn btn-outline-danger"
                           onClick={() => {
-                            setEditando(null);
-                            setNovoArmazem({ 
-                              nome: '', 
-                              capacidadeTotal: '',
-                              pais: '',
-                              estado: '',
-                              cidade: '',
-                              rua: ''
-                            });
+                            setEditingArmazem(null);
+                            setNome("");
+                            setCapacidadeTotal("");
+                            setPais("");
+                            setEstado("");
+                            setCidade("");
+                            setRua("");
                           }}
                         >
                           Cancelar
@@ -388,19 +353,72 @@ export default function Armazem() {
                 </div>
               </div>
 
+              <div className="card mb-4">
+                <div className="card-body">
+                  <h5 className="card-title">🔍 Pesquisar Armazéns</h5>
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Nome do armazém"
+                        value={searchNome}
+                        onChange={(e) => setSearchNome(e.target.value)}
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="País, estado ou cidade"
+                        value={searchLocalizacao}
+                        onChange={(e) => setSearchLocalizacao(e.target.value)}
+                      />
+                    </div>
+                    <div className="col-12">
+                      <div className="d-flex gap-2">
+                        <button 
+                          className="btn btn-primary flex-grow-1"
+                          onClick={handleSearch}
+                          disabled={loading}
+                        >
+                          {loading ? 'Pesquisando...' : 'Pesquisar'}
+                        </button>
+                        <button 
+                          className="btn btn-outline-secondary"
+                          onClick={() => {
+                            setSearchNome("");
+                            setSearchLocalizacao("");
+                            setShowResults(false);
+                          }}
+                        >
+                          Limpar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="card">
                 <div className="card-body">
                   <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h5 className="card-title mb-0">📦 Armazéns ({armazens.length})</h5>
+                    <h5 className="card-title mb-0">
+                      📦 Armazéns ({showResults ? filteredArmazens.length : armazens.length})
+                    </h5>
                     <button 
                       className="btn btn-sm btn-outline-primary"
-                      onClick={pesquisarArmazens}
+                      onClick={() => {
+                        setSearchNome("");
+                        setSearchLocalizacao("");
+                        setShowResults(false);
+                      }}
                     >
-                      Atualizar
+                      Mostrar Todos
                     </button>
                   </div>
                   
-                  {armazens.length > 0 ? (
+                  {(showResults ? filteredArmazens : armazens).length > 0 ? (
                     <div className="table-responsive">
                       <table className="table table-hover">
                         <thead>
@@ -412,7 +430,7 @@ export default function Armazem() {
                           </tr>
                         </thead>
                         <tbody>
-                          {armazens.map(armazem => (
+                          {(showResults ? filteredArmazens : armazens).map(armazem => (
                             <tr key={armazem.objectId}>
                               <td>{armazem.nome}</td>
                               <td>
@@ -434,24 +452,13 @@ export default function Armazem() {
                                 <div className="d-flex gap-2">
                                   <button
                                     className="btn btn-sm btn-outline-primary"
-                                    onClick={() => {
-                                      setEditando(armazem.objectId);
-                                      setNovoArmazem({
-                                        nome: armazem.nome,
-                                        capacidadeTotal: armazem.capacidadeTotal,
-                                        pais: armazem.pais || '',
-                                        estado: armazem.estado || '',
-                                        cidade: armazem.cidade || '',
-                                        rua: armazem.rua || ''
-                                      });
-                                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                                    }}
+                                    onClick={() => handleEdit(armazem)}
                                   >
                                     Editar
                                   </button>
                                   <button
                                     className="btn btn-sm btn-outline-danger"
-                                    onClick={() => excluirArmazem(armazem.objectId)}
+                                    onClick={() => handleDelete(armazem.objectId)}
                                     disabled={localStorage.getItem('acess') !== "Administrador"}
                                   >
                                     Excluir
@@ -466,9 +473,9 @@ export default function Armazem() {
                   ) : (
                     <div className="text-center py-4">
                       <div className="alert alert-info">
-                        {filtros.nome || filtros.localizacao || filtros.capacidadeMin || filtros.capacidadeMax
+                        {showResults
                           ? 'Nenhum armazém encontrado com esses filtros'
-                          : 'Realize uma pesquisa para visualizar os armazéns'}
+                          : 'Nenhum armazém cadastrado ainda'}
                       </div>
                     </div>
                   )}
