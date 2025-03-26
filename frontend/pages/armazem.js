@@ -126,13 +126,23 @@ export default function Armazem() {
 
   // Excluir armazém
   const handleDelete = async (objectId) => {
+    const userAcess = localStorage.getItem('acess');
+    
+    if (userAcess !== 'admin') {
+      setError("Apenas administradores podem excluir armazéns");
+      return;
+    }
+  
     if (window.confirm("Tem certeza que deseja excluir este armazém?")) {
       setLoading(true);
       try {
         const response = await fetch(`/api/armazem?objectId=${objectId}`, {
           method: "DELETE",
+          headers: {
+            'X-User-Acess': userAcess // Adicione este header
+          }
         });
-
+  
         if (response.ok) {
           setArmazens(armazens.filter((a) => a.objectId !== objectId));
         } else {
@@ -459,7 +469,6 @@ export default function Armazem() {
                                   <button
                                     className="btn btn-sm btn-outline-danger"
                                     onClick={() => handleDelete(armazem.objectId)}
-                                    disabled={localStorage.getItem('acess') !== "Administrador"}
                                   >
                                     Excluir
                                   </button>
