@@ -57,22 +57,34 @@ export default async function handler(req, res) {
           throw new Error("Uma promoção não pode ter ambos 'produto' e 'tipoProduto' preenchidos.");
         }
   
-        const body = JSON.stringify({
+        // Criar objeto para enviar ao Back4App
+        const promocaoData = {
           nome,
-          porcentagemDesconto: porcentagemDesconto ? Number(porcentagemDesconto) : null,
+          porcentagemDesconto: porcentagemDesconto ? Number(porcentagemDesconto) : undefined,
           loja,
-          inicio: inicio ? new Date(inicio).toISOString() : null,
-          fim: fim ? new Date(fim).toISOString() : null,
-          produto: produto || null,
-          tipoProduto: tipoProduto || null,
-        });
+          produto: produto || undefined,
+          tipoProduto: tipoProduto || undefined
+        };
   
-        console.log("Corpo da requisição:", body);
+        // Adicionar datas apenas se foram fornecidas
+        if (inicio) {
+          promocaoData.inicio = {
+            __type: "Date",
+            iso: new Date(inicio).toISOString()
+          };
+        }
+  
+        if (fim) {
+          promocaoData.fim = {
+            __type: "Date",
+            iso: new Date(fim).toISOString()
+          };
+        }
   
         const response = await fetch(BASE_URL, {
           method: "POST",
           headers,
-          body,
+          body: JSON.stringify(promocaoData),
         });
   
         if (!response.ok) {
@@ -100,20 +112,34 @@ export default async function handler(req, res) {
           throw new Error("Uma promoção não pode ter ambos 'produto' e 'tipoProduto' preenchidos.");
         }
   
-        const body = JSON.stringify({
+        // Criar objeto para enviar ao Back4App
+        const promocaoData = {
           nome,
-          porcentagemDesconto: porcentagemDesconto ? Number(porcentagemDesconto) : null,
+          porcentagemDesconto: porcentagemDesconto ? Number(porcentagemDesconto) : undefined,
           loja,
-          inicio: inicio ? new Date(inicio).toISOString() : null,
-          fim: fim ? new Date(fim).toISOString() : null,
-          produto: produto || null,
-          tipoProduto: tipoProduto || null,
-        });
+          produto: produto || undefined,
+          tipoProduto: tipoProduto || undefined
+        };
+  
+        // Adicionar datas apenas se foram fornecidas
+        if (inicio) {
+          promocaoData.inicio = {
+            __type: "Date",
+            iso: new Date(inicio).toISOString()
+          };
+        }
+  
+        if (fim) {
+          promocaoData.fim = {
+            __type: "Date",
+            iso: new Date(fim).toISOString()
+          };
+        }
   
         const response = await fetch(`${BASE_URL}/${objectId}`, {
           method: "PUT",
           headers,
-          body,
+          body: JSON.stringify(promocaoData),
         });
   
         if (!response.ok) {
