@@ -34,8 +34,8 @@ export default function Login() {
         localStorage.setItem("loja", data.user.loja);
         localStorage.setItem("acess", data.nivelAcesso); // ✅ Correção aqui
 
-        // Redirecionar para a página Cliente
-        router.push("/cliente");
+        // Redirecionar para a página Home
+        router.push("/home");
       } else {
         setError(data.message || "Erro ao fazer login.");
       }
