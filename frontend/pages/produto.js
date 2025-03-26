@@ -37,25 +37,51 @@ export default function Home() {
         <section>
           <nav id="navbar" className="navbar bg-primary col-12 navbar-expand-lg position-fixed">
             <div className="container-fluid col-11 m-auto">
-              <Link href="#top">
-                <Image src="/Varios-12-150ppp-01.jpg" alt="LOGO" width={40} height={40} />
+              <Link href="/home">
+                <Image
+                  src="/Varios-12-150ppp-01.jpg"
+                  alt="LOGO"
+                  width={40}
+                  height={40}
+                  className="cursor-pointer"
+                />
               </Link>
-              <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+              <button
+                className="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarNav"
+                aria-controls="navbarNav"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+              >
                 <span className="navbar-toggler-icon"></span>
               </button>
               <div className="collapse navbar-collapse" id="navbarNav">
                 <ul className="navbar-nav ms-auto">
                   <li className="nav-item">
-                    <Link href="#top"><a className="nav-link text-light">Home</a></Link>
+                    <Link href="/home" className="nav-link text-light">Home</Link>
                   </li>
                   <li className="nav-item">
-                    <Link href="/login"><a className="nav-link text-light">Login</a></Link>
+                    <Link href="/funcionario" className="nav-link text-light">Funcionário</Link>
                   </li>
                   <li className="nav-item">
-                    <Link href="/registro"><a className="nav-link text-light">Registre-se</a></Link>
+                    <Link href="/cliente" className="nav-link text-light">Cliente</Link>
                   </li>
                   <li className="nav-item">
-                    <Link href="#bottom"><a className="nav-link text-light">Sobre</a></Link>
+                    <Link href="/armazem" className="nav-link text-light">Armazém</Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link href="/promocao" className="nav-link text-light">Promoção</Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link href="#top" className="nav-link text-light">Produto</Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link href="/loja_parceira" className="nav-link text-light">Parceiro</Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link href="/index" className="nav-link text-light">Logout</Link>
                   </li>
                 </ul>
               </div>
