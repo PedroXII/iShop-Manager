@@ -15,14 +15,10 @@ export default function Home() {
       </Head>
       <div>
         <main>
-
           <section>
-            <nav
-            id="navbar"
-              className="navbar bg-primary col-12 navbar-expand-lg position-fixed"
-            >
-              <div className="container-fluid col-11 m-auto">
-                <Link href="#top">
+            <nav className="navbar navbar-expand-lg bg-primary fixed-top">
+              <div className="container-fluid">
+                <Link href="/index" className="navbar-brand">
                   <Image
                     src="/Varios-12-150ppp-01.jpg"
                     alt="LOGO"
@@ -30,37 +26,37 @@ export default function Home() {
                     height={40}
                   />
                 </Link>
+                
                 <button
                   className="navbar-toggler"
                   type="button"
-                  data-bs-toggle="collapse"
-                  data-bs-target="#navbarNav"
-                  aria-controls="navbarNav"
-                  aria-expanded="false"
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  aria-expanded={isMenuOpen}
                   aria-label="Toggle navigation"
                 >
                   <span className="navbar-toggler-icon"></span>
                 </button>
-                <div className="collapse navbar-collapse" id="navbarNav">
+
+                <div className={`collapse navbar-collapse ${isMenuOpen ? 'show' : ''}`}>
                   <ul className="navbar-nav ms-auto">
                     <li className="nav-item">
-                      <Link href="#top">
-                        <a className="nav-link text-light">Home</a>
+                      <Link href="#top" className="nav-link text-light">
+                        Home
                       </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/login">
-                        <a className="nav-link text-light">Login</a>
+                      <Link href="/login" className="nav-link text-light">
+                        Login
                       </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/registro">
-                        <a className="nav-link text-light">Registre-se</a>
+                      <Link href="/registro" className="nav-link text-light">
+                        Registro
                       </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="#bottom">
-                        <a className="nav-link text-light">Sobre</a>
+                      <Link href="#bottom" className="nav-link text-light">
+                        Sobre
                       </Link>
                     </li>
                   </ul>

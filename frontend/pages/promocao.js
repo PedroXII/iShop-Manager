@@ -183,13 +183,10 @@ export default function Promocao() {
       </Head>
       <div>
         <main>
-        <section>
-            <nav
-            id="navbar"
-              className="navbar bg-primary col-12 navbar-expand-lg position-fixed"
-            >
-              <div className="container-fluid col-11 m-auto">
-                <Link href="/home">
+          <section>
+            <nav className="navbar navbar-expand-lg bg-primary fixed-top">
+              <div className="container-fluid">
+                <Link href="/home" className="navbar-brand">
                   <Image
                     src="/Varios-12-150ppp-01.jpg"
                     alt="LOGO"
@@ -197,57 +194,57 @@ export default function Promocao() {
                     height={40}
                   />
                 </Link>
+                
                 <button
                   className="navbar-toggler"
                   type="button"
-                  data-bs-toggle="collapse"
-                  data-bs-target="#navbarNav"
-                  aria-controls="navbarNav"
-                  aria-expanded="false"
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  aria-expanded={isMenuOpen}
                   aria-label="Toggle navigation"
                 >
                   <span className="navbar-toggler-icon"></span>
                 </button>
-                <div className="collapse navbar-collapse" id="navbarNav">
+
+                <div className={`collapse navbar-collapse ${isMenuOpen ? 'show' : ''}`}>
                   <ul className="navbar-nav ms-auto">
-                  <li className="nav-item">
-                      <Link href="/home">
-                        <a className="nav-link text-light">Home</a>
+                    <li className="nav-item">
+                      <Link href="/home" className="nav-link text-light">
+                        Home
                       </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/armazem">
-                        <a className="nav-link text-light">Armazém</a>
+                      <Link href="/armazem" className="nav-link text-light">
+                        Armazém
                       </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/fornecedor">
-                        <a className="nav-link text-light">Fornecedor</a>
+                      <Link href="/fornecedor" className="nav-link text-light">
+                        Fornecedor
                       </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/funcionario">
-                        <a className="nav-link text-light">Funcionário</a>
+                      <Link href="/funcionario" className="nav-link text-light">
+                        Funcionário
                       </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/cliente">
-                        <a className="nav-link text-light">Cliente</a>
+                      <Link href="/cliente" className="nav-link text-light">
+                        Cliente
                       </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/produto">
-                        <a className="nav-link text-light">Produto</a>
+                      <Link href="/produto" className="nav-link text-light">
+                        Produto
                       </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="#top">
-                        <a className="nav-link text-light">Promoção</a>
+                      <Link href="/promocao" className="nav-link text-light">
+                        Promoção
                       </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/index">
-                        <a className="nav-link text-light">Logout</a>
+                      <Link href="/index" className="nav-link text-light">
+                        Logout
                       </Link>
                     </li>
                   </ul>

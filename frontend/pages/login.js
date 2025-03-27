@@ -56,12 +56,9 @@ export default function Login() {
       <div>
         <main>
           <section>
-            <nav
-              id="navbar"
-              className="col-12 navbar navbar-expand-lg bg-primary position-fixed"
-            >
-              <div className="col-11 container-fluid m-auto">
-                <Link href="/index">
+            <nav className="navbar navbar-expand-lg bg-primary fixed-top">
+              <div className="container-fluid">
+                <Link href="/index" className="navbar-brand">
                   <Image
                     src="/Varios-12-150ppp-01.jpg"
                     alt="LOGO"
@@ -69,30 +66,38 @@ export default function Login() {
                     height={40}
                   />
                 </Link>
+                
                 <button
                   className="navbar-toggler"
                   type="button"
-                  data-bs-toggle="collapse"
-                  data-bs-target="#navbarNav"
-                  aria-controls="navbarNav"
-                  aria-expanded="false"
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  aria-expanded={isMenuOpen}
                   aria-label="Toggle navigation"
                 >
                   <span className="navbar-toggler-icon"></span>
                 </button>
-                <div className="collapse navbar-collapse" id="navbarNav">
+
+                <div className={`collapse navbar-collapse ${isMenuOpen ? 'show' : ''}`}>
                   <ul className="navbar-nav ms-auto">
                     <li className="nav-item">
-                      <Link href="/index" className="nav-link text-light">Home</Link>
+                      <Link href="#top" className="nav-link text-light">
+                        Home
+                      </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="#top" className="nav-link text-light">Login</Link>
+                      <Link href="/login" className="nav-link text-light">
+                        Login
+                      </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="/registro" className="nav-link text-light">Registre-se</Link>
+                      <Link href="/registro" className="nav-link text-light">
+                        Registro
+                      </Link>
                     </li>
                     <li className="nav-item">
-                      <Link href="#bottom" className="nav-link text-light">Sobre</Link>
+                      <Link href="#bottom" className="nav-link text-light">
+                        Sobre
+                      </Link>
                     </li>
                   </ul>
                 </div>
