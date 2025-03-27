@@ -45,7 +45,7 @@ export default function Navbar() {
                     </Link>
                 </li>
                 <li className="nav-item">
-                    <Link href="#top" className="nav-link text-light">
+                    <Link href="#bottom" className="nav-link text-light">
                     Sobre
                     </Link>
                 </li>
