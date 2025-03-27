@@ -195,83 +195,84 @@ export default function Armazem() {
             <Navbar />
           </section>
 
-          <section id="top" className="d-flex flex-column min-vh-100 pt-lg-5">
-            <div className="container">
-              <h2 className="text-center mb-4">Armazéns</h2>
-              {error && <div className="alert alert-danger">{error}</div>}
+          <section id="top" className="d-flex flex-column min-vh-100 pt5">
+            <div className="container row m-auto">
+              <div className="col-md-8 mx-auto mt-5"> 
+                <h2 className="text-center mb-4">Armazéns</h2>
+                {error && <div className="alert alert-danger">{error}</div>}
 
-              <div className="card mb-4">
-                <div className="card-body">
-                  <h5 className="card-title">
-                    {editingArmazem ? '✏️ Editar Armazém' : '➕ Novo Armazém'}
-                  </h5>
-                  <form onSubmit={handleSubmit}>
-                    <div className="row g-3 mb-3">
-                      <div className="col-md-6">
-                        <label className="form-label">Nome*</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Nome do armazém"
-                          value={nome}
-                          onChange={(e) => setNome(e.target.value)}
-                          required
-                        />
+                <div className="card mb-4">
+                  <div className="card-body">
+                    <h5 className="card-title">
+                      {editingArmazem ? '✏️ Editar Armazém' : '➕ Novo Armazém'}
+                    </h5>
+                    <form onSubmit={handleSubmit}>
+                      <div className="row g-3 mb-3">
+                        <div className="col-md-6">
+                          <label className="form-label">Nome*</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Nome do armazém"
+                            value={nome}
+                            onChange={(e) => setNome(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="col-md-6">
+                          <label className="form-label">Capacidade Total (L)*</label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            placeholder="Em litros"
+                            min="0"
+                            value={capacidadeTotal}
+                            onChange={(e) => setCapacidadeTotal(e.target.value)}
+                            required
+                          />
+                        </div>
                       </div>
-                      <div className="col-md-6">
-                        <label className="form-label">Capacidade Total (L)*</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          placeholder="Em litros"
-                          min="0"
-                          value={capacidadeTotal}
-                          onChange={(e) => setCapacidadeTotal(e.target.value)}
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="row g-3 mb-3">
-                      <div className="col-md-3">
-                        <label className="form-label">País</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Ex: Brasil"
-                          value={pais}
-                          onChange={(e) => setPais(e.target.value)}
-                        />
-                      </div>
-                      <div className="col-md-3">
-                        <label className="form-label">Estado/Província</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Ex: São Paulo"
-                          value={estado}
-                          onChange={(e) => setEstado(e.target.value)}
-                        />
-                      </div>
-                      <div className="col-md-3">
-                        <label className="form-label">Cidade</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Ex: Campinas"
-                          value={cidade}
-                          onChange={(e) => setCidade(e.target.value)}
-                        />
-                      </div>
-                      <div className="col-md-3">
-                        <label className="form-label">Endereço</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Rua, número"
-                          value={rua}
-                          onChange={(e) => setRua(e.target.value)}
-                        />
+                      
+                      <div className="row g-3 mb-3">
+                        <div className="col-md-3">
+                          <label className="form-label">País</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Ex: Brasil"
+                            value={pais}
+                            onChange={(e) => setPais(e.target.value)}
+                          />
+                        </div>
+                        <div className="col-md-3">
+                          <label className="form-label">Estado/Província</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Ex: São Paulo"
+                            value={estado}
+                            onChange={(e) => setEstado(e.target.value)}
+                          />
+                        </div>
+                        <div className="col-md-3">
+                          <label className="form-label">Cidade</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Ex: Campinas"
+                            value={cidade}
+                            onChange={(e) => setCidade(e.target.value)}
+                          />
+                        </div>
+                        <div className="col-md-3">
+                          <label className="form-label">Endereço</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Rua, número"
+                            value={rua}
+                            onChange={(e) => setRua(e.target.value)}
+                          />
                       </div>
                     </div>
                     
@@ -302,6 +303,7 @@ export default function Armazem() {
                       )}
                     </div>
                   </form>
+                  </div>
                 </div>
               </div>
 
