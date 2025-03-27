@@ -5,6 +5,7 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 
 export default function Armazem() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
   const [armazens, setArmazens] = useState([]);
   const [nome, setNome] = useState("");

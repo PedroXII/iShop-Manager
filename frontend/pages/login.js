@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/router";
 
 export default function Login() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");

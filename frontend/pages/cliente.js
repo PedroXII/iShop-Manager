@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 
 export default function Client() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [clientes, setClientes] = useState([]);
   const [nome, setNome] = useState("");
   const [statusAssinatura, setStatusAssinatura] = useState(false);

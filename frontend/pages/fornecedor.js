@@ -3,6 +3,7 @@ import Image from "next/image";
 import Head from "next/head";
 
 export default function Fornecedor() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   return (
     //O front-end.
     <>

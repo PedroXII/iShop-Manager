@@ -4,6 +4,7 @@ import Link from "next/link";
 import styles from "@/styles/Home.module.css";
 
 export default function Home() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   return (
     <>
       <Head>

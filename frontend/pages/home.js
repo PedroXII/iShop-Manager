@@ -3,6 +3,7 @@ import Image from "next/image";
 import Head from "next/head";
 
 export default function HomeUser() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   return (
     //O front-end.
     <>

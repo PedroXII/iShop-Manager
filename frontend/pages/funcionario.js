@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 
 export default function Funcionario() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [funcionarios, setFuncionarios] = useState([]);
   const [nome, setNome] = useState("");
   const [cargo, setCargo] = useState("");

@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 
 export default function Product() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [produtos, setProdutos] = useState([]);
   const [nome, setNome] = useState("");
   const [marca, setMarca] = useState("");

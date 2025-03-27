@@ -5,6 +5,7 @@ import Head from "next/head";
 import { useState, useEffect } from "react";
 
 export default function Registro() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [nivel, setNivel] = useState("Usuário");
   const [acao, setAcao] = useState(null);
   const [lojas, setLojas] = useState([]);
