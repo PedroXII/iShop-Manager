@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Head from "next/head";
 import Navbar from './components/NavbarUser';
+import { useState } from 'react'; 
 
 export default function HomeUser() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
