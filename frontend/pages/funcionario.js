@@ -181,10 +181,11 @@ export default function Funcionario() {
             <Navbar />
           </section>
 
-          <section id="top" className="d-flex flex-column min-vh-100">
+          <section id="top" className="d-flex flex-column min-vh-100 pt-5">
             <div className="container row m-auto">
               <div className="col-md-8 mx-auto mt-5">
                 <h2 className="text-center mb-4">Funcionários</h2>
+                <p className="lead fw-bold mt-2">⚠️ Aviso: se cadastar como usuário e como funcionário são dois cadastros independentes.</p>
                 {error && <div className="alert alert-danger">{error}</div>}
 
                 {/* Formulário para adicionar/editar funcionário */}

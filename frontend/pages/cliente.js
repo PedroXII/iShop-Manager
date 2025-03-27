@@ -172,7 +172,7 @@ export default function Client() {
             <Navbar />
           </section>
 
-          <section id="top" className="d-flex flex-column min-vh-100">
+          <section id="top" className="d-flex flex-column min-vh-100 pt-5">
             <div className="container row m-auto">
               <div className="col-md-8 mx-auto mt-5">
                 <h2 className="text-center mb-4">Clientes</h2>

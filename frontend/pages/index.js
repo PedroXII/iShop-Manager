@@ -22,7 +22,7 @@ export default function Home() {
             <Navbar />
           </section>
 
-          <section id="top" className="d-flex flex-column min-vh-100">
+          <section id="top" className="d-flex flex-column min-vh-100 pt-5">
             <div className="container row m-auto">
               <Image
                 src="/43160.jpg"

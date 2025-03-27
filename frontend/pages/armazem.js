@@ -195,8 +195,9 @@ export default function Armazem() {
             <Navbar />
           </section>
 
-          <section id="top" className="d-flex flex-column min-vh-100" style={{ paddingTop: '80px' }}>
+          <section id="top" className="d-flex flex-column min-vh-100 pt-5">
             <div className="container">
+              <h2 className="text-center mb-4">Armazéns</h2>
               {error && <div className="alert alert-danger">{error}</div>}
 
               <div className="card mb-4">

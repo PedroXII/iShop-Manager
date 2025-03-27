@@ -37,6 +37,7 @@ export default function HomeUser() {
                 <div className="col-12 text-center mb-5">
                   <h2 className="display-4">Bem-vindo ao iShop Manager</h2>
                   <p className="lead">Selecione uma opção abaixo para começar</p>
+                  <p className="lead fw-bold mt-2">⚠️ Aviso: se cadastar como usuário e como funcionário são dois cadastros independentes.</p>
                 </div>
                 
                 <div className="col-10">

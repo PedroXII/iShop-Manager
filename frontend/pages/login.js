@@ -61,7 +61,7 @@ export default function Login() {
             <Navbar />
           </section>
 
-          <section id="top" className="d-flex flex-column align-items-center justify-content-center min-vh-100">
+          <section id="top" className="d-flex flex-column align-items-center justify-content-center min-vh-100 pt-5">
             <div className="container row m-auto">
               <div className="col-md-6 bg-white border p-4 rounded shadow mx-auto">
                 <h2 className="text-center mb-4">Login</h2>
