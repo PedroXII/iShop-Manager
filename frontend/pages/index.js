@@ -35,7 +35,7 @@ export default function Home() {
                 style={{ marginTop: "100px", textAlign: "justify" }}
               >
                 Bem-vindo ao iShop Manager! Gerencie seus produtos e estoque de
-                forma eficiente e segura.Mantenha o controle do seu estoque de 
+                forma eficiente e segura. Mantenha o controle do seu estoque de 
                 forma eficiente! Com o iShop Manager, você pode cadastrar produtos, 
                 acompanhar movimentações e evitar perdas com uma gestão simplificada 
                 e intuitiva.
@@ -75,7 +75,7 @@ export default function Home() {
                   className="container d-flex align-items-center col-6"
                   style={{ marginTop: "100px", textAlign: "justify" }}
                 >
-                  Aproveite ferramentas inteligentes para criar promoções, ajustar 
+                  Aproveite ferramentas para criar promoções, ajustar 
                   preços e atrair mais clientes. Otimize seu faturamento oferecendo 
                   os produtos certos, no momento certo!
               </div>
@@ -88,8 +88,8 @@ export default function Home() {
               <div className="card-body">
                 <h5 className="card-title">📦 Gestão de Pedidos</h5>
                 <p className="card-text">
-                Monitore seus pedidos e garanta que seus clientes 
-                recebam seus produtos, sem complicações!
+                Tenha o registro do seu negócio de forma online 
+                com segurança e compartilhamneto entre a empresa!
                 </p>
               </div>
             </div>
@@ -111,7 +111,7 @@ export default function Home() {
               <div className="card-body">
                 <h5 className="card-title">🏭 Logística Eficiente</h5>
                 <p className="card-text">
-                  Gerencie seus fornecedores, acompanhe seus produtos 
+                  Gerencie seus fornecedores, gerenciando seus produtos 
                   desde o estoque até a entrega e reduza custos operacionais.
                 </p>
               </div>

@@ -40,6 +40,11 @@ export default function Navbar() {
                     </Link>
                 </li>
                 <li className="nav-item">
+                    <Link href="/cliente" className="nav-link text-light">
+                    Cliente
+                    </Link>
+                </li>
+                <li className="nav-item">
                     <Link href="/fornecedor" className="nav-link text-light">
                     Fornecedor
                     </Link>
@@ -47,11 +52,6 @@ export default function Navbar() {
                 <li className="nav-item">
                     <Link href="/funcionario" className="nav-link text-light">
                     Funcionário
-                    </Link>
-                </li>
-                <li className="nav-item">
-                    <Link href="/cliente" className="nav-link text-light">
-                    Cliente
                     </Link>
                 </li>
                 <li className="nav-item">
