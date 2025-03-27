@@ -34,7 +34,7 @@ export default function Login() {
 
         // Salvar loja e nível de acesso no localStorage
         localStorage.setItem("loja", data.user.loja);
-        localStorage.setItem("acess", data.nivelAcesso); // ✅ Correção aqui
+        localStorage.setItem("acess", data.nivelAcesso); 
 
         // Redirecionar para a página Home
         router.push("/home");

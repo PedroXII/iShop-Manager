@@ -20,7 +20,7 @@ export default function Client() {
   const [searchSexo, setSearchSexo] = useState("");
   const [searchStatusAssinatura, setSearchStatusAssinatura] = useState("");
   const [showResults, setShowResults] = useState(false);
-  const [loja, setLoja] = useState(null); // Novo estado para armazenar a loja
+  const [loja, setLoja] = useState(null); // Estado para armazenar a loja
   const router = useRouter();
 
   // Carregar a loja do usuário logado apenas no lado do cliente
@@ -67,7 +67,7 @@ export default function Client() {
       idade,
       comprasAnteriores,
       sexo,
-      loja, // Incluir a loja no corpo da requisição
+      loja, 
     };
 
     try {
